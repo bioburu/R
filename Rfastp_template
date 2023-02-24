@@ -1,0 +1,15 @@
+library(Rfastp)
+outputPrefix <- tempfile(tmpdir = '/home/amp_prog/Desktop/rstudio/Rfastp_output')
+se_json_report <- rfastp(read1 = '/home/amp_prog/Desktop/SRA_tool_fetch/sra/ERR2861959.fastq.gz',
+                         outputFastq = paste0(outputPrefix,"_single_end"),thread=4,
+                         adapterTrimming = TRUE, qualityFiltering = TRUE,
+                         qualityFilterPhred = 25)
+summary <- qcSummary(se_json_report)
+summary
+cat('Base quality plot')
+plot <- curvePlot(se_json_report)
+plot
+cat('GC content plot')
+plot2 <- curvePlot(se_json_report,curves = 'content_curves')
+plot2
+#trim <- trimSummary(se_json_report)
