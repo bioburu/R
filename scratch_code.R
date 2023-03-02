@@ -5,15 +5,11 @@ library(monocle3)
 library(SeuratWrappers)
 library(ggplot2)
 library(ggridges)
-setwd('/home/amp_prog/rstudio/HLH')
-matrix <- read.csv('external_gene_name.csv')
-rownames(matrix) <- matrix$X
+setwd("/home/amp_prog/Desktop/rstudio/CAR_M")
+matrix <- read.delim('GSE120086_Raw_read_counts_challengeData.txt')
+dim(matrix)
+row.names(matrix) <- make.names(matrix$refGene, unique = TRUE)
 matrix <- matrix[,-1]
-colnames(matrix) <- c('3.4yr_1','3.4yr_2','3.4yr_3','3.4yr_4',
-            '4.3yr_1','4.3yr_2','4.3yr_3','4.3yr_4',
-            '12yr_1','12yr_2','12yr_3',
-            'Norm_1','Norm_2','Norm_3','Norm_4','Norm_5','Norm_6')
-head(matrix)
 data <- CreateSeuratObject(counts = matrix)
 dim(data)
 data$orig.ident
@@ -32,34 +28,59 @@ all.genes <- rownames(data)
 all.genes
 data <- ScaleData(data, features = all.genes)
 dim(data)
-data <- RunPCA(data,npcs=16, features = VariableFeatures(object = data))
-DimHeatmap(data, dims = 1:6, cells = 500, balanced = T)
+data <- RunPCA(data,npcs=11, features = VariableFeatures(object = data))
+DimHeatmap(data, dims = 1:11, cells = 500, balanced = T)
 ElbowPlot(data)
 data
-DimPlot(data, reduction = "pca", pt.size = 7, label.box = TRUE, label.size = 8)
+plot <-DimPlot(data, reduction = "pca", pt.size = 7, label = FALSE)
+plot
+data@meta.data
+plot$data
 break
+#---------------------------------------------------------------------------
+#------------------MACRO PANEL----------------------------------------
+VlnPlot(data, features = c("CD14","FCGR3A","ITGAM","ITGAX","CD38","MILR1",
+                           "CREB5","MXD3","EGR1","SPI1","TLR1","TLR2","TLR3",
+                           "TLR4","TLR5","TLR6"), cols  = c('red','green','blue'))
+RidgePlot(data, features = c("CD14","FCGR3A","ITGAM","ITGAX","CD38","MILR1",
+                           "CREB5","MXD3","EGR1","SPI1","TLR1","TLR2","GAPDH",
+                           "IDH2","TLR5","TLR6"), cols  = c('red','green','blue'))
+VlnPlot(data, features = c("TLR7","TLR8","TLR8-AS1","TLR9","CCR5",
+                           "HLA-A","HLA-B","HLA-DRA","HLA-DRB1","HLA-C",
+                           "HLA-DMA","HLA-DMB","HLA-DPA1","HLA-DPB1","HLA-DQA1",
+                           "HLA-DQB1"), cols  = c('red','green'))
+RidgePlot(data, features = c("TLR7","TLR8","TLR8-AS1","TLR9","CCR5",
+                           "HLA-A","HLA-B","HLA-DRA","HLA-DRB1","HLA-C",
+                           "HLA-DMA","HLA-DMB","HLA-DPA1","HLA-DPB1","HLA-DQA1",
+                           "HLA-DQB1"), cols  = c('red','green','blue'))
+VlnPlot(data, features = c("HLA-DRB5","HLA-E","HLA-F","HLA-G","CD274","CD80",
+                           "CD86","SELL","SELPLG","SPN","ITGA4",
+                           "CD163","CD163L1","CD74","CCR5","CCRL2"), cols  = c('red','green'))
+RidgePlot(data, features = c("HLA-DRB5","HLA-E","HLA-F","HLA-G","CD274","CD80",
+                           "CD86","SELL","SELPLG","SPN","ITGA4",
+                           "CD163","CD163L1","CD74","CCR5","CCRL2"), cols  = c('red','green'))
+VlnPlot(data, features = c("IL1B","IL1RN","IL5RA","IL7R","CXCL8","IL10",
+                           "IL17RA","IL18BP","TGFBI","TNFRSF4","CSF1",
+                           "CXCL12"), cols  = c('red','green'))
+RidgePlot(data, features = c("IL1B","IL1RN","IL5RA","IL7R","CXCL8","IL10",
+                           "IL17RA","IL18BP","TGFBI","TNFRSF4","CSF1",
+                           "CXCL12"), cols  = c('red','green'))
+VlnPlot(data, features = c('CFD','C5'), cols  = c('red','green'))
+VlnPlot(data, features = c('SERPING1','VSIG4','VTN'), cols  = c('red','green'))
+#-----Final candidate genes ----------------------------------------------------
+VlnPlot(data, features = c('CFD','C5','SERPING1','VSIG4','VTN'), cols  = c('red','green','blue'))
 
-#------------------LYMPHOCYTE PANEL----------------------------------------
-VlnPlot(data, features = c("CD3D","CD19","NCAM1","CD8A","IL2", "CCR7", "LAMP1","CD3E","IL10","IGHA1",
-                           "CXCR4","IL3RA","IL7R","IL6","IL18","CD14"), pt.size = 1, cols  = c('blue','green','red','orange'))
 
-VlnPlot(data, features = c("CD14","CD22","CD8B","ITGAX","CD38","FCGR3A","ITGAM", "MILR1", "FLT3LG","IL15","IDH2","GAPDH","JAK2",
-                           "CCL3","CD4","LAG3"), pt.size = 1, cols  = c('blue','green','red','orange'))
-####cYTOKEINSSSSSS-------------------------
-VlnPlot(data, features = c("IL1RAP","IL13RA2","IL1RN","IL12RB2","IL11",
-                           "IL19","IL18","IL17RB","IL10RB","IL10","IL1RAP",
-                           "IL13RA2","IL2RB","IL23A","IL27RA","IL2RA"), pt.size = 1, cols  = c('blue','green','red','orange'))
-VlnPlot(data, features = c("IL22RA1","IL2RG","IL32","IL4R","IL4","IL5","IL6",
-                           "IL7","CSF3","CSF1R","TNFRSF17","TNFAIP1","TNFAIP3",
-                           "TNFSF10","TNFAIP6","TNFSF9"), pt.size = 1, cols  = c('blue','green','red','orange'))
-VlnPlot(data, features = c("TNFSF14","TNFRSF11A","TNFAIP8","TNFRSF10B","TNFSF4",
-                           "TNFSF12","IFNG","IFNAR1","IFNLR1","IFNAR2","IFNAR2.2",
-                           "IL6.3"), pt.size = 1, cols  = c('blue','green','red','orange'))
-#-------------Complement pathway--------------------------------------------
-VlnPlot(data, features = c("CD93","CD55","CD59","C2","C5","C4A","C8G","CFP",
-                           "CLU","C1QA","CR1","CR2","CFI","ITGAM","ITGAX","C1QB"), pt.size = 1, cols  = c('blue','green','red','orange'))
-VlnPlot(data, features = c("C1R","VTN","CD2","C5AR2","CFH","C5AR1","LAT"), pt.size = 1, cols  = c('blue','green','red','orange'))
-VariableFeatures(data)[1:200]
-#--------------------------------------------------------------------
-VlnPlot(data, features = c("IL6","IL6.1","IL6.2","IL6.3","IL6.4",
-                           "IL6.5","IL6.7"), pt.size = 1, cols  = c('blue','green','red','orange'))
+RidgePlot(data, features = c('CD14','ITGAM','ITGAX','MXD3','TLR2','TLR8.AS1',
+                           'CD274','SPN','CD163L1','ITGA4','IL1B','CXCL8','TGFBI',
+                           'CFD'), cols  = c('red','green','blue'))
+RidgePlot(data, features = c('ITGAM', 'ITGAX', 'MXD3', 'SPI1', 'TLR7', 'HLA-DRA', 
+                           'HLA-DRB1','HLA-DRB5', 'HLA-DPA1', 'HLA-DPB1', 'HLA-DQA1', 
+                           'HLA-DQB1'), cols  = c('red','green'))
+VlnPlot(data, features = c('HLA-C', 'ITGA4', 'IL1B', 'IL1RN', 'IL10', 
+                           'IL18BP', 'TGFBI', 'TNFRSF4', 'CXCL12', 'CSF1', 'CFD', 'C5'), cols  = c('red','green'))
+RidgePlot(data, features = c('HLA-C', 'ITGA4', 'IL1B', 'IL1RN', 'IL10', 
+                           'IL18BP', 'TGFBI', 'TNFRSF4', 'CXCL12', 'CSF1', 'CFD', 'C5'), cols  = c('red','green'))
+VlnPlot(data, features = c('CD74'), cols  = c('red','green'))
+RidgePlot(data, features = c('CD74'), cols  = c('red','green'))
+
