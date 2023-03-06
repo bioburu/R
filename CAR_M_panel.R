@@ -5,7 +5,7 @@ library(monocle3)
 library(SeuratWrappers)
 library(ggplot2)
 library(ggridges)
-setwd('/home/amp_prog/rstudio/CAR_M')
+setwd('/home/amp_prog/rstudio/GSE120084_carM')
 matrix <- read.delim('GSE120084_Raw_read_counts_PhenoMap.txt')
 row.names(matrix)<- make.names(matrix$GeneID,unique = TRUE)
 matrix <- matrix[,-1]
@@ -47,9 +47,16 @@ RidgePlot(data, features = c("GAPDH","ACACA","IDH2","HK1","G6PD","PRDX2",
                            "ATP1A1","ATP1B1","CPT1A"), cols  = c('blue','green','red','orange','yellow'))
 #activation/exhaustion markers
 VlnPlot(data, features = c("JAK2","STAT3","IRAK1","IRAK3","MAPK1",
-                           "POGLUT1","LAG3","CCL22","CCL8"), pt.size = 1, cols  = c('blue','green','red','orange','yellow'))
+                           "POGLUT1","LAG3","CCL22","CCL8","SH2D1A",
+                           "SLAMF7","SLAMF8"), pt.size = 1, cols  = c('blue','green','red','orange','yellow'))
 RidgePlot(data, features = c("JAK2","STAT3","IRAK1","IRAK3","MAPK1",
-                           "POGLUT1","LAG3","CCL22","CCL8"), cols  = c('blue','green','red','orange','yellow'))
+                             "POGLUT1","LAG3","CCL22","CCL8","SH2D1A",
+                             "SLAMF7","SLAMF8"), cols  = c('blue','green','red','orange','yellow'))
+#effector markers
+VlnPlot(data, features = c("GZMA","GZMB","PRF1","PSAP","LAMP1","LAMP2",
+                           "ATG7","MRC1","MSR1","NR1H3"), pt.size = 1, cols  = c('blue','green','red','orange','yellow'))
+RidgePlot(data, features = c("GZMA","GZMB","PRF1","PSAP","LAMP1","LAMP2",
+                           "ATG7","MRC1","MSR1","NR1H3"), cols  = c('blue','green','red','orange','yellow'))
 ####cYTOKEINSSSSSS-------------------------
 VlnPlot(data, features = c("IFNG","IFNAR1","IFNLR1","IFNAR2","IFNAR2.2",
                            "IL1B","IL1RAP","IL1RN","IL2RA","IL2RB",
