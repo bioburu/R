@@ -23,19 +23,19 @@ attributes=listAttributes(ensembl)
 attributes[1:5,]
 #load in whatever and clean
 setwd("/home/amp_prog/Downloads")
-matrix <- read.delim("/home/amp_prog/Downloads/GSM6947006_CXCR4-IL10-MSC1_featureCounts.txt",sep = "")
+matrix <- read.delim('GSM6922972_13475-abundance.tsv')
 dim(matrix)
 View(matrix)
 colnames(matrix)<- matrix[1,]
 matrix<-matrix[-1,]
-geneid <- (matrix$Geneid)
+geneid <- (matrix$target_id)
 head(geneid)
-dim(geneid)
+(geneid)
 #align identifiers
 listFilters(ensembl)
 listAttributes(ensembl)
-genes <-getBM(attributes = c('ensembl_gene_id','external_gene_name','description'),
-      filters = 'ensembl_gene_id',
+genes <-getBM(attributes = c('ensembl_transcript_id_version','ensembl_gene_id','external_gene_name','description'),
+      filters = 'ensembl_transcript_id_version',
       values = geneid,
       mart = ensembl)
 head(genes)
