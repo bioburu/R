@@ -106,3 +106,6 @@ FeaturePlot(data, features = "pseudotime")
 #Histograms of transcripts by cluster ID
 RidgePlot(data, features = c("FLT3LG", "MILR1", "FLT3", "GZMB", "CD19"), sort = T, 
           idents = c("5", "6", "0", "7", "13"))
+#---------------------------------------------------------------------------------------------
+DF <- as.data.frame(as.matrix(GetAssayData(data)))
+View(DF)
