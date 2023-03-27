@@ -1,5 +1,7 @@
 #---damage associated molecular pattern (alarmins)-----------------------
 data@meta.data
+VlnPlot(data, features = c('DDX58','RNF135'),pt.size = 2) 
+
 VlnPlot(data, features = c('HMGB1','HMGB2','HMGB3','VIM','TP53'),pt.size = 2) 
 VlnPlot(data, features = c('HSP90AA1','HSPB1','HSPA1A','HSF1','HSF2','HSPA4'),pt.size = 2) 
 VlnPlot(data, features = c('HSPA5','HSP90AB1','HSPA1B','HSPD1','HSPD1','HSPH1'),pt.size = 2) 
