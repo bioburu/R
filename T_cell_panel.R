@@ -2,7 +2,7 @@
 VlnPlot(data, features = c('CD3D','CD3G','CD3E','CD4','CD8A','CD8B'))
 #-------MAIT----------------------------------------------------------------------------
 VlnPlot(data, features = c('CD44','KLRB1','IL18R1','CCR5','CXCR6','CCR6'))
-VlnPlot(data, features = c())
+VlnPlot(data, features = c('FOXP3'))
 
 #-------General  markers-------------------------------------------------
 VlnPlot(data, features = c('PTPRC','CCR7','FOXP3','LCK','CD28','LAP3'))
