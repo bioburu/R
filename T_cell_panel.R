@@ -7,7 +7,7 @@ VlnPlot(data, features = c())
 #-------General  markers-------------------------------------------------
 VlnPlot(data, features = c('PTPRC','CCR7','FOXP3','LCK','CD28','LAP3'))
 VlnPlot(data, features = c('ZAP70','TRAC','TRBC1','TRBC2','PLCG1','ITK'))
-VlnPlot(data, features = c('FYN','ADA','','CD69','CD2','CD40LG'))
+VlnPlot(data, features = c('FYN','ADA','SELL','CD69','CD2','CD40LG'))
 VlnPlot(data, features = c('FAS','FASLG','VAV1','CD6','FLT3LG','CTLA4'))
 
 #---------T cell receptor alpha variables-------------------------------------
