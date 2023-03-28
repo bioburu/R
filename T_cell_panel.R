@@ -5,7 +5,7 @@ VlnPlot(data, features = c('CCR7','CD27','SELL','CD69','ITGAE','FOXP3','CD40LG',
 #-------Activation/exhaustion markers-------------------------------------------
 VlnPlot(data, features = c('LAG3','CD69','FYN','LTB','FAS','FASLG','CTLA4','LSP1','HCST'))
 VlnPlot(data, features = c("JAK2","STAT3","IRAK1","IRAK3","MAPK1","POGLUT1","CCL22","CXCL4","SH2D1A"))
-VlnPlot(data, features = c("SLAMF7","SLAMF8","CD44",'TIGIT','PD1','CD38'))
+VlnPlot(data, features = c("SLAMF7","SLAMF8","CD44",'TIGIT','PD1','CD38','MKI67))
 #---------T cell receptor alpha variables-------------------------------------
 VlnPlot(data, features = c('TRAV1-1','TRAV1-2','TRAV10','TRAV12-1','TRAV12-2','TRAV12-3','TRAV13-1','TRAV13-2','TRAV14DV4'))
 VlnPlot(data, features = c('TRAV16','TRAV17','TRAV18','TRAV19','TRAV2','TRAV20','TRAV21','TRAV22','TRAV23DV6'))
