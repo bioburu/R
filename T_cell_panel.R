@@ -16,7 +16,7 @@ VlnPlot(data, features = c('TRBV12-3','TRBV12-4','TRBV12-5','TRBV13','TRBV14','T
 VlnPlot(data, features = c("GAPDH","ACACA","IDH2","HK1","G6PD","PRDX2","PRDX2","ATP1A1","ATP1B1","CPT1A"))
 #activation markers
 VlnPlot(data, features = c("JAK2","STAT3","IRAK1","IRAK3","MAPK1","POGLUT1","CCL22","CXCL4","SH2D1A"))
-VlnPlot(data, features = c("SLAMF7","SLAMF8","CD44))
+VlnPlot(data, features = c("SLAMF7","SLAMF8","CD44"))
 #effector markers
 VlnPlot(data, features = c("GZMA","GZMB","PRF1","PSAP","LAMP1","LAMP2","LAG3","GNLY"))
 ####cYTOKEINSSSSSS-------------------------
