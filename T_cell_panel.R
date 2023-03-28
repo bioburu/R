@@ -37,3 +37,9 @@ VlnPlot(data, features = c("IL13","IL13RA1","IL15","IL15RA","IL16","IL17RA"))
 VlnPlot(data, features = c("IL17RB","IL17RC","IL18","IL18BP","IL21R","IL23A",""))
 VlnPlot(data, features = c("","IL27RA","IL32","TNF","TNFAIP1","TNFAIP3","TNFSF10"))
 VlnPlot(data, features = c("IL31","CSF1","CSF2","LDHA","CD46","GIMAP1"))
+####PRR and MHC-----------------------------------------------------------
+RidgePlot(data, features = c("TLR1","TLR2","TLR3","TLR4","TLR5","TLR6","TLR7",
+                             "TLR8","TLR9","TLR10"), cols  = c('grey','red','blue'))
+RidgePlot(data, features = c("HLA.A","HLA.B","HLA.C","HLA.G","HLA.H","HLA.J","HLA.L",
+                             "HLA.DRA","HLA.DRB1",
+                             "LILRB1","RFX5","CIITA"), cols  = c('grey','red','blue'))
