@@ -32,29 +32,13 @@ dim(data)
 data <- RunPCA(data, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
-data <- FindNeighbors(data)
-data <- FindClusters(data, resolution = c(0.3,0.5,0.7,1))
-head(data@meta.data)
-p1 <- DimPlot(data, group.by = "RNA_snn_res.0.3", label = T)
-p2 <- DimPlot(data, group.by = "RNA_snn_res.0.5", label = T)
-p3 <- DimPlot(data, group.by = "RNA_snn_res.0.7", label = T)
-p4 <- DimPlot(data, group.by = "RNA_snn_res.1", label = T)
-p1 + p2 + p3 + p4
-Idents(data) <- "RNA_snn_res.0.7"
-head(data@meta.data)
-data <- RunUMAP(data, dims = 1:9)
-data
-DimPlot(data, reduction = "umap")
-
-VlnPlot(data, features = c("MILR1", "FLT3LG", "FLT3", "CD14","ITGAM","ITGAX","IL6",
-                           "HLA-DRA","IL8","CLEC2D","CYFIP2","IFNG"))#, slot = "counts", log = TRUE)
-VlnPlot(data, features = c("MILR1","IFNGR1","IL4R","IFNGR2","PTPN22","TNF","SOX4",
-                           "JAK2","STAT3","NLRP3","IL1B","IL18"))#, slot = "counts", log = TRUE)
-VlnPlot(data, features = c("CD3D","CD19","NCAM1","CD8A"))#, slot = "counts", log = TRUE)
-FeaturePlot(data, features = c("MILR1", "FLT3LG", "FLT3", "CD14","ITGAM","ITGAX","IL6",
-                               "HLA-DRA","CCL2","CLEC2D","CYFIP2","CCR5","CD209","IL4R",
-                               "IFNGR2", "PTPN22"))
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+VlnPlot(data, features = c('CD3D','CD3G','CD3E','PTPRC','CD19','CD14'),pt.size=0.5)
+data$TRAC.groups <- 'TRAC.pos'
+data$TRAC.groups[WhichCells(data, expression= TRAC < 0.5)] <- 'TRAC.neg'
+DimPlot(data, reduction = 'pca',split.by = 'TRAC.groups')
+data@meta.data
+data <- subset(data, subset = TRAC.groups != "TRAC.neg")
 break
 #--------------------------------monocle------------------------------------
 #convert to monocle object
