@@ -32,6 +32,8 @@ dim(data)
 data <- RunPCA(data, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
+DimPlot(data, reduction = "pca", pt.size = 7, label = FALSE)
+
 #------------------------------------------------------------------------------------------------------------------------------------------
 VlnPlot(data, features = c('CD3D','CD3G','CD3E','PTPRC','CD19','CD14'),pt.size=0.5)
 data$TRAC.groups <- 'TRAC.pos'
