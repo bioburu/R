@@ -42,6 +42,10 @@ DimPlot(data, reduction = 'pca',split.by = 'TRAC.groups')
 data@meta.data
 data <- subset(data, subset = TRAC.groups != "TRAC.neg")
 break
+#DF <- as.data.frame(as.matrix(GetAssayData(data)))
+#Genes <- row.names(DF)
+#DF <- cbind(Genes,DF)
+#View(DF)
 #--------------------------------monocle------------------------------------
 #convert to monocle object
 cds <- as.cell_data_set(data)
