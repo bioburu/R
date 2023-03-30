@@ -19,31 +19,50 @@ HTO<-matrix[c('Hashtag1','Hashtag2','Hashtag6','Hashtag7','Hashtag8'),]
 HTO
 #--------------------------------------------------------------------------------------------------------------
 #------------Or-------------------------------------------------------------------------------------------------
-library(Seurat)
-library(tidyverse)
-library(dplyr)
-library(monocle3)
-library(SeuratWrappers)
-library(ggplot2)
-library(ggridges)
 setwd('/home/amp_prog/Desktop/rstudio/CAR_T/GSE153697_+-CD19')
-features_path <- "GSM4649255_mRNA_features.tsv.gz"
-barcodes_path <- "GSM4649255_mRNA_barcodes.tsv.gz"
-matrix_path <- "GSM4649255_mRNA_matrix.mtx.gz"
-mRNA <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-features_path <- "GSM4649254_HTO_features.tsv.gz"
-barcodes_path <- "GSM4649254_HTO_barcodes.tsv.gz"
-matrix_path <- "GSM4649254_HTO_matrix.mtx.gz"
-#--Set feature.column as needed Default=2------------------------------------------------
-Hashtags <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path,feature.column = 1)
-Hashtags
-# Select cell barcodes detected by both RNA and HTO 
-filtered <- intersect(colnames(mRNA), colnames(Hashtags))
-# Subset RNA and HTO counts by joint cell barcodes
-mRNA <- mRNA[, filtered]
-Hashtags <- as.matrix(Hashtags[, filtered])
-# Confirm that the HTO have the correct names
-rownames(Hashtags)
+meta<- read.delim('GSE153697_filtered_metadata_matrix.tsv')
+meta$hash.ID<-as.factor(meta$hash.ID)
+summary(meta)
+meta<- read.delim('GSE153697_filtered_metadata_matrix.tsv')
+meta$hash.ID[meta$hash.ID == "T1-CD19neg"] <- "pretreatmentCD19neg"
+meta$hash.ID[meta$hash.ID == "T1-CD19pos"] <- "pretreatmentCD19pos"
+meta$hash.ID[meta$hash.ID == "T2-CD19neg"] <- "treatedCD19neg"
+meta$hash.ID[meta$hash.ID == "T2-CD19pos"] <- "treatedCD19pos"
+summary(meta)
+matrix<-read.delim('GSE153697_filtered_raw_expression_matrix.tsv')
+head(matrix)[1:10]
+dim(matrix)
+dim(meta)
+colnames(matrix) <- meta$hash.ID[match(colnames(matrix), meta$ID)]
+rownames(matrix)<-matrix[,1]
+matrix<-matrix[,-1]
+data<-CreateSeuratObject(counts=matrix)
+data
+head(data@meta.data)
+data<-AddMetaData(data,meta$hash.ID,col.name = 'hash.ID')
+Idents(data)<-data$hash.ID
+data@active.ident
+data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^MT-")
+VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
+FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + geom_smooth()
+data <- subset(data, subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & percent.mt <5)
+data <- NormalizeData(data)
+data <- FindVariableFeatures(data, selection.method = "vst", nfeatures = 2000)
+VariableFeatures(data)
+top10 <- head(VariableFeatures(data), 10)
+top10
+plot1 <- VariableFeaturePlot(data)
+#LabelPoints(plot = plot1, points= top10, repel = T)
+plot1
+all.genes <- rownames(data)
+all.genes
+data <- ScaleData(data, features = all.genes)
+dim(data)
+data <- RunPCA(data, features = VariableFeatures(object = data))
+DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
+ElbowPlot(data)
+DimPlot(data, reduction = "pca", pt.size = 1, label = FALSE)
+break 
 #---------------------------------------------------------------------------------------------------------------------
 data<-CreateSeuratObject(counts = matrix)
 data<-NormalizeData(data)
