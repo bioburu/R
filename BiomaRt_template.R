@@ -1,4 +1,9 @@
 library(biomaRt)
+setwd("/home/amp_prog/Desktop")
+matrix <- read.delim('relapse_2.txt')
+matrix<-matrix[,-c(2:4)]
+colnames(matrix)<-c('Gene','relapse_2')
+#---------------------------------------------------------------------
 Sys.setenv("http_proxy"="http://my.proxy.org:9999")
 listMarts()
 ensembl=useMart("ensembl")
@@ -6,10 +11,6 @@ listDatasets(ensembl)
 ensembl=useDataset("hsapiens_gene_ensembl",mart = ensembl)
 filters = listFilters(ensembl)
 attributes=listAttributes(ensembl)
-setwd("/home/amp_prog/Downloads")
-matrix <- read.delim('postBiTE.txt')
-matrix<-matrix[,-c(2:4)]
-colnames(matrix)<-c('Gene','postBiTE')
 #-----------------------------------------------------------------
 dim(matrix)
 geneid <- matrix$Gene
@@ -25,14 +26,15 @@ head(genes)
 df <- matrix[matrix$Gene %in% unique(genes$ensembl_transcript_id_version),]
 dim(df)
 dim(matrix)
-View(df)
+#View(df)
 genes$ensembl_transcript_id_version
-View(genes)
+#View(genes)
 colnames(genes)[1]<- 'Gene'
 Ftable <- merge(genes, df, by="Gene")
-View(Ftable)
 Ftable<- Ftable[,-c(1)]
 colnames(Ftable)[1] <- c('Gene')
-write.csv(Ftable,file = 'Relapse_1.csv')
+View(Ftable)
+write.csv(Ftable,file = 'relapse_2.csv')
+
 
 
