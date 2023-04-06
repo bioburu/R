@@ -1,5 +1,5 @@
 library(biomaRt)
-setwd("/home/amp_prog/Desktop/salmon/salmon_output")
+setwd("/home/amp_prog/Desktop")
 matrix <- read.delim('screening_1.txt')
 matrix<-matrix[,-c(2:4)]
 colnames(matrix)<-c('Gene','relapse_2')
