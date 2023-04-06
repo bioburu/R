@@ -42,6 +42,8 @@ DimPlot(data, reduction = 'pca',split.by = 'TRAC.groups')
 data@meta.data
 data <- subset(data, subset = TRAC.groups != "TRAC.neg")
 break
+FeatureScatter(data, feature1 = "CD14", feature2 = "ITGAX",pt.size = 1,cols = c('black','red','grey'))
+
 #DF <- as.data.frame(as.matrix(GetAssayData(data)))
 #Genes <- row.names(DF)
 #DF <- cbind(Genes,DF)
