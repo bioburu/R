@@ -1,6 +1,6 @@
 library(biomaRt)
-setwd("/home/amp_prog/Desktop")
-matrix <- read.delim('relapse_2.txt')
+setwd("/home/amp_prog/Desktop/salmon/salmon_output")
+matrix <- read.delim('screening_1.txt')
 matrix<-matrix[,-c(2:4)]
 colnames(matrix)<-c('Gene','relapse_2')
 #---------------------------------------------------------------------
@@ -26,15 +26,11 @@ head(genes)
 df <- matrix[matrix$Gene %in% unique(genes$ensembl_transcript_id_version),]
 dim(df)
 dim(matrix)
-#View(df)
 genes$ensembl_transcript_id_version
-#View(genes)
 colnames(genes)[1]<- 'Gene'
 Ftable <- merge(genes, df, by="Gene")
 Ftable<- Ftable[,-c(1)]
 colnames(Ftable)[1] <- c('Gene')
 View(Ftable)
 write.csv(Ftable,file = 'relapse_2.csv')
-
-
 
