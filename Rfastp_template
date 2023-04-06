@@ -1,7 +1,8 @@
 library(Rfastp)
 outputPrefix <- tempfile(tmpdir = '/home/amp_prog/Desktop/rstudio/Rfastp_output')
-se_json_report <- rfastp(read1 = '/home/amp_prog/Desktop/SRA_tool_fetch/sra/ERR2861959.fastq.gz',
-                         outputFastq = paste0(outputPrefix,"_single_end"),thread=4,
+pe_json_report <- rfastp(read1 = '/home/amp_prog/Desktop/SRR7353756_1.fastq.gz',
+                         read2 = '/home/amp_prog/Desktop/SRR7353756_2.fastq.gz',
+                         outputFastq = paste0(outputPrefix,"_paired_end"),
                          adapterTrimming = TRUE, qualityFiltering = TRUE,
                          qualityFilterPhred = 25)
 summary <- qcSummary(se_json_report)
