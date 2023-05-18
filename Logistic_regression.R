@@ -1,51 +1,72 @@
-print("GSE34860 part2")
-print("Setting up environment")
 library(caTools)
 library(car)
 library(caret)
 library(InformationValue)
 library(pROC)
 library(ROCR)
-print("Uploading results from part 1")
-df<-read.csv(file ="/home/no_more_chromebooks/rstudio/logistic_input.csv")
-print("Reassigning first column as row names")
-row.names(df)<-df$X
-df<-df[,-1]
-print("Confirming correct data frame format for logistic modeling")
+#-------------Set working directory
+setwd('/home/amp_prog/Desktop/hope_model/GSE208653_hpv_cancer')
+#-------------Add files for cancer group                
+features_path <- 'GSM6360686_SCC_4.features.tsv.gz'
+barcodes_path <- 'GSM6360686_SCC_4.barcodes.tsv.gz'
+matrix_path <- 'GSM6360686_SCC_4.matrix.mtx.gz'
+matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
+matrix<-as.data.frame(matrix[c('CD14','CD274','MRC1'),])
+factor<-rep(c(1),times=ncol(matrix))
+df<-rbind(factor,matrix)
+rownames(df)[1]<-'disease_status'
+#-------------Add files for lesions group
+features_path <- 'GSM6360684_HSIL_1.features.tsv.gz'
+barcodes_path <- 'GSM6360684_HSIL_1.barcodes.tsv.gz'
+matrix_path <- 'GSM6360684_HSIL_1.matrix.mtx.gz'
+matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
+matrix<-as.data.frame(matrix[c('CD14','CD274','MRC1'),])
+factor<-rep(c(0),times=ncol(matrix))
+matrix<-rbind(factor,matrix)
+df<-cbind(df,matrix)
+#--------------Add files for hpv group
+features_path <- 'GSM6360682_N_1.features.tsv.gz'
+barcodes_path <- 'GSM6360682_N_1.barcodes.tsv.gz'
+matrix_path <- 'GSM6360682_N_1.matrix.mtx.gz'
+matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
+matrix<-as.data.frame(matrix[c('CD14','CD274','MRC1'),])
+factor<-rep(c(0),times=ncol(matrix))
+matrix<-rbind(factor,matrix)
+df<-cbind(df,matrix)
+#-------------no hpv
+features_path <- 'GSM6360680_N_HPV_NEG_1.features.tsv.gz'
+barcodes_path <- 'GSM6360680_N_HPV_NEG_1.barcodes.tsv.gz'
+matrix_path <- 'GSM6360680_N_HPV_NEG_1.matrix.mtx.gz'
+matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
+matrix<-as.data.frame(matrix[c('CD14','CD274','MRC1'),])
+factor<-rep(c(0),times=ncol(matrix))
+matrix<-rbind(factor,matrix)
+df<-cbind(df,matrix)
+#-----------Subsample groups
+set.seed(3)
+df<-as.data.frame(t(df))
+summary(df)
 str(df)
-print("Reassigning response variable as binary integers")
-df$design.factor<-ifelse(df$design.factor=='mutated',1,0)
-df$design.factor<-as.integer(df$design.factor)
-print(df$design.factor)
-print("Confirming correct data frame structure")
-print("Scanning for na values")
-dim(df)
-df<-na.omit(df)
-dim(df)
-print("No na values detected")
-print("Subsampling data into 70% training and 30% testing data sets")
 subsample<-caTools::sample.split(df, SplitRatio=0.7)
 train<-subset(df, subsample==TRUE)
 dim(train)
 train<-na.omit(train)
 dim(train)
-print("Assigning testing data set")
 test<-subset(df,subsample==FALSE)
 dim(test)
 test<-na.omit(test)
 dim(test)
-print("Assigning training data set response variable for modeling")
-genotype<- train$design.factor
-print("Referencing scanning_final_table for significant FDR values and genes")
-print("Assigning predictor variables for logistic modeling")
-CD34<-train$CD34
-ATP10A<-train$ATP10A
-print("Running binary logistic modeling with training dataset")
-model<-glm(genotype~CD34+ATP10A, family = binomial)
-print("Confirming significant coefficients and intercept")
+#----------run model
+model<-glm(disease_status~CD274,data = train, family = binomial)
+summary(model)
+model<-glm(disease_status~MRC1,data = train, family = binomial)
+summary(model)
+model<-glm(disease_status~CD14,data = train, family = binomial)
+summary(model)
+model<-glm(disease_status~CD274+MRC1+CD14,data = train, family = binomial)
 summary(model)
 logLik(model)
-table(df$design.factor)
+table(df$disease_status)
 print("Calculating Mcfadden's pseudo R squared")
 null<-model$null.deviance/-2
 resdDEV<-model$deviance/-2
@@ -55,49 +76,38 @@ print("Displaying variance inflation factors")
 vif(model)
 print("Displaying variable importance factors")
 varImp(model)
-print("Preparing testing predictor variables for response test")
-print("Assigning predictor X")
-CD34<-train$CD34
-ATP10A<-train$ATP10A
-print("Calculating predicted scores from testing variables")
-predict<- predict(model, data.frame(test), type="response")
-print("Displaying predicted scores")
-print(predict)
-print("Assigning predicted scores as factors")
+dim(test)
+dim(train)
+predict<- predict(model, data.frame(CD274=test$CD274,MRC1=test$MRC1,CD14=test$CD14), type="response")
+print(head(predict))
+length(predict)
 pred_factor <- predict
-print("Rounding predicted scores")
+print(head(pred_factor))
 pred_factor<- round(pred_factor)
-print("Confirm rounding")
-print(pred_factor)
-print("Transforming predicted scores into factors")
+print(head(pred_factor))
 pred_factor<-as.factor(pred_factor)
-print("Confirm transformation")
-print("Assign actuals")
-actual<-as.factor(test$design.factor)
-print("Confirm transformation")
-actual
-print("Generating confusion matrix")
-print(actual)
-print(pred_factor)
+print(head(pred_factor))
+actual<-as.factor(test$disease_status)
 caret::confusionMatrix(actual, pred_factor)
-print("Confirming confusion matrix")
-print("Aligning predicted scores with actuals scores")
 predicted.scores<-predict
-actual.scores<-test$design.factor
+head(predicted.scores)
+actual.scores<-test$disease_status
+head(actual.scores)
 df2<-cbind(actual.scores,predicted.scores)
 df2<-data.frame(df2,check.names = FALSE)
 str(df2)
-print("Displaying cutoff optimized for predicting NPMc+ mutant AML patient response")
-optCutoff<-optimalCutoff(actuals = df2$actual.scores,
-                         predictedScores = df2$predicted.scores,
+optCutoff<-optimalCutoff(actuals = actual.scores,
+                         predictedScores = predicted.scores,
                          optimiseFor = "Ones",
                          returnDiagnostics = TRUE)
-print("Displaying AUC score")
-auc(df2$actual.scores,df2$predicted.scores)
-print("Plotting AUC curve")
+optCutoff
+auc(actual.scores,predicted.scores)
 ROC_pred<-prediction(df2$predicted.scores,df2$actual.scores)
 ROC_perf<-performance(ROC_pred,'tpr','fpr')
 plot(ROC_perf,colorize=TRUE,print.cutoffs.at=seq(0.1,by=0.1))
-table(df$design.factor)
+table(df$disease_status)
 summary(model)
 logLik(model)
+caret::confusionMatrix(actual, pred_factor)
+
+
