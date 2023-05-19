@@ -1,8 +1,6 @@
 library(Seurat)
 library(tidyverse)
 library(dplyr)
-library(monocle3)
-library(SeuratWrappers)
 library(ggplot2)
 library(ggridges)
 setwd('/home/amp_prog/Downloads')
