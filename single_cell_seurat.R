@@ -70,7 +70,7 @@ DimPlot(data, reduction = 'pca',split.by = 'CD14.groups')
 head(data@meta.data)
 data <- subset(data, subset = CD14.groups != "CD14.pos")
 gc()
-#-------------CD45+ CD19+ TRAC+ CD14- MKI67+    -------------------------------------------
+#-------------CD45+ CD19+ TRAC- CD14- MKI67+    -------------------------------------------
 data$MKI67.groups <- 'MKI67.pos'
 data$MKI67.groups[WhichCells(data, expression= MKI67 < 0.1)] <- 'MKI67.neg'
 DimPlot(data, reduction = 'pca',split.by = 'MKI67.groups')
