@@ -3,20 +3,20 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(ggridges)
-setwd('/home/amp_prog/Downloads')
-features_path <- 'GSE230295_L6features.tsv.gz'
-barcodes_path <- 'GSE230295_L6barcodes.tsv.gz'
-matrix_path <- 'GSE230295_L6matrix.mtx.gz'
+setwd('')
+barcodes_path <- ''
+features_path <- ''
+matrix_path <- ''
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-x <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'one_percent')
+x <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '')
 #---------------------------------------------------------------------------
-features_path <- 'GSE230295_L7features.tsv.gz'
-barcodes_path <- 'GSE230295_L7barcodes.tsv.gz'
-matrix_path <- 'GSE230295_L7matrix.mtx.gz'
+barcodes_path <- '' 
+features_path <- ''
+matrix_path <- ''
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-y <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'ninety_percent')
+y <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '')
 #---------------------------------------------------------------------------
-data<-merge(x,y,project='B_ALL')
+data<-merge(x,y,project='')
 rm(x,y,matrix,features_path,barcodes_path,matrix_path)
 head(data@active.ident)
 gc()
