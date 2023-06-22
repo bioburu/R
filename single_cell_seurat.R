@@ -78,7 +78,7 @@ DimPlot(data, reduction = 'pca',split.by = 'MKI67.groups')
 head(data@meta.data)
 data <- subset(data, subset = MKI67.groups != "MKI67.neg")
 gc()
-VlnPlot(data, features = c('PTPRC','CD19','CD3D','CD14','MKI67'),pt.size=0.1)
+VlnPlot(data, features = c('PTPRC','CD19','TRAC','CD14','MKI67'),pt.size=0.1)
 #--------------------------------------------------------------
 df <- as.data.frame(as.matrix(GetAssayData(data)))
 Genes <- row.names(df)
