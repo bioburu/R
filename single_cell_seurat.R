@@ -43,7 +43,7 @@ data <- RunPCA(data, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
-FindMarkers(data, ident.1 = '', ident.2 = '')
+FindMarkers(data, ident.1 = '', ident.2 = '', features = c(''))
 
 #----------Isolate CD45+  -------------------------------------
 data$CD45.groups <- 'CD45.pos'
