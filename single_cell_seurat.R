@@ -81,9 +81,13 @@ head(data@meta.data)
 data <- subset(data, subset = MKI67.groups != "MKI67.neg")
 gc()
 VlnPlot(data, features = c('PTPRC','CD19','TRAC','CD14','MKI67'),pt.size=0.1)
+break
+###significance tester
+FindMarkers(data, ident.1 = '', ident.2 = '', features = c())
+VlnPlot(data, features = c(),pt.size=2,idents = c(),cols = c())
 #--------------------------------------------------------------
 df <- as.data.frame(as.matrix(GetAssayData(data)))
 Genes <- row.names(df)
 df <- cbind(Genes,df)
 View(df)
-break  
+
