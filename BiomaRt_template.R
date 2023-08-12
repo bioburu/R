@@ -1,5 +1,5 @@
 library(biomaRt)
-setwd("/home/amp_prog/Desktop")
+setwd("/home/amp_prog/Downloads")
 matrix <- read.csv('')
 #---------------------------------------------------------------------
 Sys.setenv("http_proxy"="http://my.proxy.org:9999")
