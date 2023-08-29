@@ -53,6 +53,7 @@ DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
 table(data@meta.data$orig.ident)
+DimPlot(data,dims = c(1,2),reduction = 'pca',cols = c(),pt.size = 4)
 VlnPlot(data, features = c('PTPRC','CD19','TRAC','CD14','MILR1','MKI67','FCGR3A','MRC1'),cols = c())
 FindMarkers(data, ident.1 = 'meta_tumor', ident.2 = 'tumor', features = c('PTPRC','TRAC','CD14','MILR1','MKI67','FCGR3A','MRC1'))
 #-----regression modeling
