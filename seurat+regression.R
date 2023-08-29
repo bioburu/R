@@ -80,7 +80,7 @@ print(pR2)
 vif(model)
 #------Displaying variable importance factors
 varImp(model)
-newdata = data.frame(PTPRC=test$PTPRC,FCGR3A=test$FCGR3A,MILR1=test$MILR1,CD14=test$CD14,MRC1=test$MRC1)
+newdata = test
 summary(newdata)
 dim(newdata)
 dim(test)
