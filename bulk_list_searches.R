@@ -1,0 +1,5 @@
+library(dplyr)
+setwd('/home/amp_prog/Downloads/GSE149655_RAW')
+list1<-read.csv('list1.csv')
+list2<-read.csv('list2.csv')
+results<-semi_join(list1, list2, by = c('x'))
