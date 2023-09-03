@@ -14,7 +14,7 @@ setwd('/home/amp_prog/Desktop/TAM_manuscript/datasets/GSE228512_GBM.sera')
 matrix<-read.csv('GSE228512_hiseq_counts.csv')
 row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
 matrix<-matrix[,-1]
-data <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'normal')
+data <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'GBM.EVs')
 gc()
 data <- RenameIdents(object = data, `preop` = "GBM.EV")
 table(data@active.ident)
