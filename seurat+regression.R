@@ -114,4 +114,6 @@ table(data@meta.data$orig.ident)
 table(test$ident)
 break 
 VlnPlot(data, features = c('PTPRC','MRC1','MILR1','CD14','FCGR3A'),cols = c('red','grey','grey'))
-
+tester<-data.frame(LYZ=450,CYBB=7,S100A9=45,VSIG4=20,APOC1=345,SPP1=1457,LILRB4=3,S100A8=34,CTSD=234,
+                     FBP1=21,CTSB=100,FTL=2384,ACP5=12,CSTB=28)
+predict(model, tester, type = 'response')
