@@ -112,6 +112,10 @@ logLik(model)
 caret::confusionMatrix(pred_factor, actual,positive='1')
 table(data@meta.data$orig.ident)
 table(test$ident)
+#----------------------------------------------------------
+setwd('/home/amp_prog/Desktop/TAM_manuscript/bulk_logistic/milr1_final')
+saveRDS(model,file = 'gbm_pt1_training.rda')
+model<-readRDS('gbm_pt1_training.rda')
 break 
 VlnPlot(data, features = c('PTPRC','MRC1','MILR1','CD14','FCGR3A'),cols = c('red','grey','grey'))
 tester<-data.frame(LYZ=450,CYBB=7,S100A9=45,VSIG4=20,APOC1=345,SPP1=1457,LILRB4=3,S100A8=34,CTSD=234,
