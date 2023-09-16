@@ -1,40 +1,5 @@
-
-data <- NormalizeData(data)
-data <- FindVariableFeatures(data, selection.method = "vst", nfeatures = 2000)
-VariableFeatures(data)
-top10 <- head(VariableFeatures(data), 10)
-top10
-plot1 <- VariableFeaturePlot(data)
-#LabelPoints(plot = plot1, points= top10, repel = T)
-plot1
-all.genes <- rownames(data)
-all.genes
-data <- ScaleData(data, features = all.genes)
-dim(data)
-data <- RunPCA(data, features = VariableFeatures(object = data))
-DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
-ElbowPlot(data)
-data <- FindNeighbors(data)
-data <- FindClusters(data, resolution = c(0.3,0.5,0.7,1))
-head(data@meta.data)
-p1 <- DimPlot(data, group.by = "RNA_snn_res.0.3", label = T)
-p2 <- DimPlot(data, group.by = "RNA_snn_res.0.5", label = T)
-p3 <- DimPlot(data, group.by = "RNA_snn_res.0.7", label = T)
-p4 <- DimPlot(data, group.by = "RNA_snn_res.1", label = T)
-p1 + p2 + p3 + p4
-Idents(data) <- "RNA_snn_res.0.7"
-head(data@meta.data)
-data <- RunUMAP(data, dims = 1:11)
-data
-DimPlot(data, reduction = "umap")
-break
-VlnPlot(data, features = c("MILR1", "FLT3LG", "FLT3", "CD14","ITGAM","ITGAX","HLA-DRA",
-                           "GZMA","GZMB","PRF1","LAMP1","FTH1"))#, slot = "counts", log = TRUE)
-VlnPlot(data, features = c("IL1A","IL1B","IL3RA", "IL6", "IL6R", "IL6ST","CXCL8","CSF1",
-                           "IL10","IL15","TGFB1","IL18"))#, slot = "counts", log = TRUE)
-VlnPlot(data, features = c("IFNG","IFNGR1","TLR1","GAPDH","ACACA","IDH2","TNF",
-                           "TNFAIP6","SOX4","JAK2","STAT3","CCL3"))#, slot = "counts", log = TRUE)
-VlnPlot(data, features = c("CD3D", "CD4", "IL16","CD28","CD86","CD80","CD8A","IL2","CD19","CD22",
-                           "NCAM1","FCGR3A"))
-
-break
+sample <- sample(c(TRUE, FALSE), nrow(reg), replace=TRUE, prob=c(0.5,0.5))
+train  <- reg[sample, ]
+table(train$ident)
+test   <- reg[!sample, ]
+table(test$ident)
