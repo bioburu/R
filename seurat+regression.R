@@ -9,26 +9,26 @@ library(caret)
 library(InformationValue)
 library(pROC)
 library(ROCR)
-setwd('/home/amp_prog/Desktop/TAM_manuscript/datasets/GSE221575_CRC')
-#---------------------------------------------------------------------------
-features_path <- 'GSM6886539_Rectum-03T_genes.tsv.gz'
-barcodes_path <- 'GSM6886539_Rectum-03T_barcodes.tsv.gz'
-matrix_path <- 'GSM6886539_Rectum-03T_matrix.mtx.gz'
+setwd()
+features_path <- 'genes.tsv'
+barcodes_path <- 'barcodes.tsv'
+matrix_path <- 'matrix.mtx'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-x <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'tumor')
+x <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'adjacent')
 summary(x@active.ident)
 #---------------------------------------------------------------------------
-#---------------------------------------------------------------------------
-features_path <- 'GSM6886540_Liver_metastasis_genes.tsv.gz'
-barcodes_path <- 'GSM6886540_Liver_metastasis_barcodes.tsv.gz'
-matrix_path <- 'GSM6886540_Liver_metastasis_matrix.mtx.gz'
+setwd()
+features_path <- 'genes.tsv'
+barcodes_path <- 'barcodes.tsv'
+matrix_path <- 'matrix.mtx'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-y <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'meta_tumor')
+y <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'HCC')
 summary(y@active.ident)
+#---------------------------------------------------------------------------
 data<-merge(x,y=c(y),project='')
 table(data@meta.data$orig.ident)
 head(data@active.ident)
-rm(x,y,z)
+rm(x,y)
 gc()
 data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^MT-")
 VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
@@ -39,8 +39,8 @@ data <- NormalizeData(data)
 gc()
 data <- FindVariableFeatures(data, selection.method = "vst", nfeatures = 2000)
 VariableFeatures(data)
-top10 <- head(VariableFeatures(data), 10)
-top10
+top1000 <- head(VariableFeatures(data), 1000)
+top1000
 plot1 <- VariableFeaturePlot(data)
 plot1
 all.genes <- rownames(data)
@@ -53,32 +53,80 @@ DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
 table(data@meta.data$orig.ident)
-DimPlot(data,dims = c(1,2),reduction = 'pca',cols = c(),pt.size = 4)
-VlnPlot(data, features = c('PTPRC','CD19','TRAC','CD14','MILR1','MKI67','FCGR3A','MRC1'),cols = c())
-FindMarkers(data, ident.1 = 'meta_tumor', ident.2 = 'tumor', features = c('PTPRC','TRAC','CD14','MILR1','MKI67','FCGR3A','MRC1'))
-#-----regression modeling
-reg<-FetchData(data,vars = c('ident','CD14','FCGR3A','MILR1','MRC1','PTPRC'),slot = 'counts')
+rm(matrix)
+gc()
+VlnPlot(data, features = c('PTPRC','CD19','TRAC','CD14','MILR1'),cols = c('red','grey'))
+#----------Isolate CD45+  -------------------------------------
+data$CD45.groups <- 'CD45.pos'
+data$CD45.groups[WhichCells(data, expression= PTPRC < 0.1)] <- 'CD45.neg'
+DimPlot(data, reduction = 'pca',split.by = 'CD45.groups')
+head(data@meta.data)
+data <- subset(data, subset = CD45.groups != "CD45.neg")
+gc()
+table(data@meta.data$orig.ident)
+#-------------CD45+ CD19-  ---------------------------------------------------------
+data$CD19.groups <- 'CD19.pos'
+data$CD19.groups[WhichCells(data, expression= CD19 < 0.1)] <- 'CD19.neg'
+DimPlot(data, reduction = 'pca',split.by = 'CD19.groups')
+head(data@meta.data)
+data <- subset(data, subset = CD19.groups != "CD19.pos")
+gc()
+table(data@meta.data$orig.ident)
+#-------------CD45+ CD19- TRAC- -------------------------------------------
+data$TRAC.groups <- 'TRAC.pos'
+data$TRAC.groups[WhichCells(data, expression= TRAC < 0.1)] <- 'TRAC.neg'
+DimPlot(data, reduction = 'pca',split.by = 'TRAC.groups')
+head(data@meta.data)
+data <- subset(data, subset = TRAC.groups != "TRAC.pos")
+gc()
+table(data@meta.data$orig.ident)
+#-------------CD45+ CD19- TRAC- CD14+     -------------------------------------------
+data$CD14.groups <- 'CD14.pos'
+data$CD14.groups[WhichCells(data, expression= CD14 < 0.1)] <- 'CD14.neg'
+DimPlot(data, reduction = 'pca',split.by = 'CD14.groups')
+head(data@meta.data)
+data <- subset(data, subset = CD14.groups != "CD14.neg")
+gc()
+table(data@meta.data$orig.ident)
+#----------Isolate MILR1+  -------------------------------------
+data$MILR1.groups <- 'MILR1.pos'
+data$MILR1.groups[WhichCells(data, expression= MILR1 < 0.1)] <- 'MILR1.neg'
+DimPlot(data, reduction = 'pca',split.by = 'MILR1.groups')
+head(data@meta.data)
+data <- subset(data, subset = MILR1.groups != "MILR1.neg")
+gc()
+table(data@meta.data$orig.ident)
+VlnPlot(data, features = c('MILR1'),cols = c())
+#---------------------------------------------------------------------------
+DimPlot(data,dims = c(1,2),reduction = 'pca',cols = c(),pt.size = 0.5)
+table(data@meta.data$orig.ident)
+#----------------------------------------------------
+setwd('/home/amp_prog/Desktop/models/GSE242889_liver_cancer')
+list<-read.csv('gene_list.csv')
+gene_list<-list$x
+#----split data
+reg<-FetchData(data,vars = c('ident',gene_list),slot = 'counts')
 table(reg$ident)
-reg$ident<-ifelse(reg$ident=='meta_tumor', 1, 0)
+reg$ident<-ifelse(reg$ident=='HCC', 1, 0)
 table(reg$ident)
-set.seed(387)
-sample <- sample(c(TRUE, FALSE), nrow(reg), replace=TRUE, prob=c(0.9,0.1))
-train  <- reg[sample, ]
-table(train$ident)
-test   <- reg[!sample, ]
-table(test$ident)
+#------Even out group numbers and shuffle
+edit<-reg[-c(76:246),]
+table(edit$ident)
+reg<-edit[sample(1:nrow(edit)),]
+table(reg$ident)
+test<-reg
+#--------------------------------------------------
+set.seed(14)
 #----------run model
-model<-glm(ident~MRC1+FCGR3A+CD14+MILR1+PTPRC,data = train, family = binomial)
+setwd()
+model<-read_rds('hcc5_model.rda')
+vif(model)
 summary(model)
+varImp(model)
 logLik(model)
-#----------Mcfadden's pseudo R squared
-null<-model$null.deviance/-2
-resdDEV<-model$deviance/-2
-pR2<-(null-resdDEV)/null
-print(pR2)
 #------Displaying variance inflation factors
 vif(model)
-#------Displaying variable importance factors
+#------Displaying variable importances
 varImp(model)
 newdata = test
 summary(newdata)
@@ -104,7 +152,8 @@ optCutoff<-optimalCutoff(actuals = actuals,
                          returnDiagnostics = TRUE)
 head(optCutoff)
 auc(actuals,predicted)
-ROC_pred<-prediction(df$predicted,df$actual)
+str(df$predicted)
+ROC_pred<-prediction(df$predicted,df$actuals)
 ROC_perf<-performance(ROC_pred,'tpr','fpr')
 plot(ROC_perf,colorize=TRUE,print.cutoffs.at=seq(0.1,by=0.1))
 summary(model)
@@ -112,12 +161,7 @@ logLik(model)
 caret::confusionMatrix(pred_factor, actual,positive='1')
 table(data@meta.data$orig.ident)
 table(test$ident)
-#----------------------------------------------------------
-setwd('/home/amp_prog/Desktop/TAM_manuscript/bulk_logistic/milr1_final')
-saveRDS(model,file = 'gbm_pt1_training.rda')
-model<-readRDS('gbm_pt1_training.rda')
 break 
-VlnPlot(data, features = c('PTPRC','MRC1','MILR1','CD14','FCGR3A'),cols = c('red','grey','grey'))
-tester<-data.frame(LYZ=450,CYBB=7,S100A9=45,VSIG4=20,APOC1=345,SPP1=1457,LILRB4=3,S100A8=34,CTSD=234,
-                     FBP1=21,CTSB=100,FTL=2384,ACP5=12,CSTB=28)
-predict(model, tester, type = 'response')
+VlnPlot(data, features = c('CD163','MRC1','FCGR3A'),cols = c('grey','red'))
+FindMarkers(data, ident.1 = 'HCC', ident.2 = 'adjacent', features = c('CD163','MRC1','FCGR3A'))
+VlnPlot(data, features = c('DDX58','IFIH1','NFKB1'),cols = c('grey','red'))
