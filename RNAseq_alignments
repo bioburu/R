@@ -1,2 +1,16 @@
 #-----preview fastq files in command terminal
 less fastq.gz
+#-----clean fastq files in rfastp
+library(Rfastp)
+pe_json_report <- rfastp(read1 = 'R1.fastq.gz',
+                         read2 = 'R22.fastq.gz',
+                         outputFastq = 'name_filtered_paired',
+                         adapterTrimming = TRUE, qualityFiltering = TRUE,
+                         qualityFilterPhred = 30)
+summary <- qcSummary(pe_json_report)
+summary
+plot <- curvePlot(pe_json_report)
+plot
+plot2 <- curvePlot(pe_json_report,curves = 'content_curves')
+plot2
+trim <- trimSummary(pe_json_report)
