@@ -3,7 +3,7 @@ less fastq.gz
 #-----clean fastq files in rfastp
 library(Rfastp)
 pe_json_report <- rfastp(read1 = 'R1.fastq.gz',
-                         read2 = 'R22.fastq.gz',
+                         read2 = 'R2.fastq.gz',
                          outputFastq = 'name_filtered_paired',
                          adapterTrimming = TRUE, qualityFiltering = TRUE,
                          qualityFilterPhred = 30)
