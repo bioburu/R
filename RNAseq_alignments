@@ -29,3 +29,4 @@ salmon quant -i /home/deviancedev/Desktop/genome_folder/alias/mm10_cdna/salmon_i
 #-- example: Desktop/genome_folder/alias/mm10cdna/salmon_index/default 
 #---save quant.sf files to .csv files
 #---combine all runs in libreoffice and save as .csv for analysis
+#---align ensembl ids to gene names in BiomaRt
