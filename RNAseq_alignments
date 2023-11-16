@@ -1,0 +1,2 @@
+#-----preview fastq files in command terminal
+less fastq.gz
