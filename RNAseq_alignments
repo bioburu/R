@@ -25,4 +25,7 @@ salmon quant -i /home/deviancedev/Desktop/genome_folder/alias/mm10_cdna/salmon_i
 -l IU -1 /home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals/norm1_R1.fastq.gz 
 -2 /home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals/norm1_R2.fastq.gz 
 --validateMappings -o norm1_salmon
-#----
+#--navigate to default folder in salmon index folder
+#-- example: Desktop/genome_folder/alias/mm10cdna/salmon_index/default 
+#---save quant.sf files to .csv files
+#---combine all runs in libreoffice and save as .csv for analysis
