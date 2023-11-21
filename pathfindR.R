@@ -4,3 +4,5 @@ sudo apt-get install libmagick++-dev
 #------------
 install.packages("magick")
 BiocManager::install("KEGGgraph")
+install.packages('pathfindR')
+
