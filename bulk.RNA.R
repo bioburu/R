@@ -9,23 +9,22 @@ library(caret)
 library(InformationValue)
 library(pROC)
 library(ROCR)
-library(scTenifoldNet)
-setwd('/home/amp_prog/Desktop/TAM_manuscript/datasets/GSE228512_GBM.sera')
-matrix<-read.csv('GSE228512_hiseq_counts.csv')
+setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals')
+matrix<-read.csv('gene.list_unordered.csv')
+matrix<-matrix[order(matrix$Gene), ]
 row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
-matrix<-matrix[,-1]
-data <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'GBM.EVs')
+matrix<-matrix[,-c(1:7)]
+data <- CreateSeuratObject(counts=matrix,project = 'TAA')
 gc()
-data <- RenameIdents(object = data, `preop` = "GBM.EV")
+data@active.ident
 table(data@active.ident)
-data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^MT-")
 VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
 FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + geom_smooth()
 data <- NormalizeData(data)
 data <- FindVariableFeatures(data, selection.method = "vst", nfeatures = 2000)
 VariableFeatures(data)
-top10 <- head(VariableFeatures(data), 10)
-top10
+top1000 <- head(VariableFeatures(data), 1000)
+top1000
 gc()
 plot1 <- VariableFeaturePlot(data)
 plot1
@@ -35,72 +34,50 @@ gc()
 data <- ScaleData(data, features = all.genes)
 gc()
 dim(data)
-data <- RunPCA(data, features = VariableFeatures(object = data))
-DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
+dim(data)
+data <- RunPCA(data,npcs = 5, features = VariableFeatures(object = data))
+DimHeatmap(data, dims = 1:5, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
 table(data@meta.data$orig.ident)
-#----split data
-reg<-FetchData(data,vars = c('ident','GTF2IP1','RNA5SP30','SNORD89','GOLGA6L23P','MAGED4B'),slot = 'counts')
-table(reg$ident)
-reg$ident<-ifelse(reg$ident=='preop', 1, 0)
-table(reg$ident)
-set.seed(14)
-sample <- sample(c(TRUE, FALSE), nrow(reg), replace=TRUE, prob=c(0.5,0.5))
-train  <- reg[sample, ]
-table(train$ident)
-test   <- reg[!sample, ]
-table(test$ident)
-#----------run model
-model<-glm(ident~GTF2IP1+RNA5SP30+SNORD89+GOLGA6L23P+MAGED4B,
-           data = train, family = binomial)
-summary(model)
-logLik(model)
-#----------Mcfadden's pseudo R squared
-null<-model$null.deviance/-2
-resdDEV<-model$deviance/-2
-pR2<-(null-resdDEV)/null
-print(pR2)
-#------Displaying variance inflation factors
-vif(model)
-#------Displaying variable importance factors
-varImp(model)
-newdata = test
-summary(newdata)
-dim(newdata)
-dim(test)
-summary(predict(model, newdata, type = 'response'))
-predicted<-predict(model, newdata, type = 'response')
-pred_factor <- predicted
-pred_factor<- round(pred_factor)
-pred_factor<-as.factor(pred_factor)
-summary(pred_factor)
-table(test$ident)
-actual<-as.factor(test$ident)
-caret::confusionMatrix(pred_factor, actual,positive='1')
-table(actual)
-table(pred_factor)
-actuals<-test$ident
-df<-cbind(actuals,predicted)
-df<-data.frame(df,check.names = FALSE)
-optCutoff<-optimalCutoff(actuals = actuals,
-                         predictedScores = predicted,
-                         optimiseFor = "Ones",
-                         returnDiagnostics = TRUE)
-head(optCutoff)
-auc(actuals,predicted)
-str(df$predicted)
-ROC_pred<-prediction(df$predicted,df$actuals)
-ROC_perf<-performance(ROC_pred,'tpr','fpr')
-plot(ROC_perf,colorize=TRUE,print.cutoffs.at=seq(0.1,by=0.1))
-summary(model)
-logLik(model)
-caret::confusionMatrix(pred_factor, actual,positive='1')
-table(data@meta.data$orig.ident)
-table(test$ident)
-break
-VlnPlot(data, features = c('GTF2IP1','RNA5SP30','SNORD89','GOLGA6L23P','MAGED4B'),cols = c('grey','red'))
-FindMarkers(data, ident.1 = 'preop', ident.2 = 'control', features = c('GTF2IP1','RNA5SP30','SNORD89','GOLGA6L23P','MAGED4B'))
-VlnPlot(data, features = c('MILR1','FLT3','MRC1','IFIH1','CCL8','TAP1','NFKB1','CD274','PDCD1LG2','IL4','IL13','IFNA1','IFNB1','IFNG','TNF','IL12B'),cols = c('grey','red'))
-FindMarkers(data, ident.1 = 'preop', ident.2 = 'control', features = c('MILR1','MRC1','DHX58','IFIH1','CCL8','TAP1','NFKB1','CD274','PDCD1LG2','IL4','IL13','IFNA1','IFNB1','IFNG','TNF','IL12B'))
+#------------------------------------------
+#x<-FindMarkers(data, ident.1 = 'TAA', ident.2 = 'Norm', 
+#               features = c(top1000),logfc.threshold=1,min.pct1=1,
+#               max.pct2=0.0001,only.pos = FALSE)
+x<-FindMarkers(data, ident.1 = 'TAA',ident.2 = 'Norm',features = c(top1000))
+x<-x[-c(215:997),]
+x<-cbind(row.names(x),x)
+colnames(x)[1]<-'Gene'
+matrix2<-read.csv('gene.list_unordered.csv')
+row.names(matrix2)<-make.names(matrix2$Gene,unique = TRUE)
+matrix2<-matrix2[,-1]
+matrix2<-cbind(row.names(matrix2),matrix2)
+colnames(matrix2)[1]<-'Gene'
+df<-merge(x,matrix2,by='Gene')
+df<-df[order(df$avg_log2FC, decreasing=TRUE),]
+out<-df
+out$Gene
+out$Gene<-sub('\\..*','',out$Gene)
+out$Gene
+write.csv(out,file = 'most_sig_out.csv')
 
+break 
+VlnPlot(data, features = c('Slc16a2','Slco1c1','Slco1c1.1','Klf9','Shh','Gli1','Gli2','Atoh1'),cols = c('grey','red'))
+FindMarkers(data, ident.1 = 'TAA', ident.2 = 'Norm', features = c('Slc16a2','Slco1c1','Slco1c1.1','Slco1c1.2','Slco1c1.3','Slco1c1.4','Slco1c1.5','Slco1c1.6','Slco1c1.7','Slco1c1.8'))
+                                                                     
+VlnPlot(data, features = c('Ptch2','Ptch2.1','Ptch2.2','Ptch2.3','Ptch2.4','Ptch2.5'),cols = c('grey','red'))
+FindMarkers(data, ident.1 = 'TAA', ident.2 = 'Norm', features = c('Ezh2','Ezh2.1','Ezh2.2','Ezh2.3','Ezh2.4','Ezh2.5','Ezh2.6','Ezh2.7','Ezh2.8',
+                                                                  'Ezh2.9','Ezh2.10','Ezh2.11','Ezh2.12','Ezh2.14'))
+
+
+x2<-cbind(row.names(x),x)
+colnames(x2)[1]<-'Gene'
+x2<-x2[,-c(4:6)]
+df<-merge(x2,matrix2,by='Gene')
+df<-df[order(df$avg_log2FC, decreasing=TRUE),]
+#-----output dataframe of most FC + sig genes
+out<-df
+out$Gene
+out$Gene<-sub('\\..*','',out$Gene)
+out$Gene
+#write.csv(out,file = 'most_sig_out.csv')
