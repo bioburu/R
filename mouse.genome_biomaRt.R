@@ -1,23 +1,27 @@
 library(biomaRt)
 library(devtools)
+#---if doesnt work, reinstall dbplyr and restart Rstudio
 #devtools::install_version("dbplyr", version = "2.3.4")
 setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals')
-matrix <- read.csv('master_ensembl.csv')
+matrix <- read.csv('quant_out_unordered.csv')
 #----If gene or transcript versions are not needed use:
 matrix$Gene
 matrix$Gene<-sub('\\..*','',matrix$Gene)
 matrix$Gene
 geneid <- matrix$Gene
-head(geneid)
 #---------------------------------------------------------------------
-head(listMarts(host='https://www.ensembl.org'),10)
-head(biomaRt::listDatasets(biomaRt::useMart("ENSEMBL_MART_ENSEMBL", host = "https://www.ensembl.org")), 10)     
-head(biomaRt::listAttributes(biomaRt::useDataset(dataset = "mmusculus_gene_ensembl", mart= useMart("ENSEMBL_MART_ENSEMBL",host= "https://www.ensembl.org"))), 10)
+#head(listMarts(host='https://www.ensembl.org'),10)
+#head(biomaRt::listDatasets(biomaRt::useMart("ENSEMBL_MART_ENSEMBL", host = "https://www.ensembl.org")), 10)     
+#head(biomaRt::listAttributes(biomaRt::useDataset(dataset = "mmusculus_gene_ensembl", mart= useMart("ENSEMBL_MART_ENSEMBL",host= "https://www.ensembl.org"))), 10)
 mart <- biomaRt::useDataset(dataset = "mmusculus_gene_ensembl",mart= useMart("ENSEMBL_MART_ENSEMBL",host= "https://www.ensembl.org"))
-genes <-getBM(attributes = c('ensembl_transcript_id','external_gene_name'),
+listFilters(mart)
+listAttributes(mart)
+listDatasets(mart)
+genes <-getBM(attributes = c('ensembl_transcript_id','external_gene_name','chromosome_name','start_position','end_position'),
               filters = 'ensembl_transcript_id',
               values = geneid,
               mart = mart)
+
 #-----------------------------------------------------------------
 df <- matrix[matrix$Gene %in% unique(genes$ensembl_transcript_id),]
 dim(df)
@@ -29,4 +33,5 @@ Ftable<- Ftable[,-c(1)]
 colnames(Ftable)[1] <- c('Gene')
 break 
 setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals')
-write.csv(Ftable,file = 'master_gene.list.csv')
+Ftable<-Ftable[order(Ftable$Gene), ]
+write.csv(Ftable,file = 'gene.list_ordered.csv')
