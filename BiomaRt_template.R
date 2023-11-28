@@ -1,6 +1,7 @@
 library(biomaRt)
 setwd()
 matrix <- read.csv('')
+#---set host to https://useast.ensembl.org or https://uswest.ensembl.org
 #---------------------------------------------------------------------
 Sys.setenv("http_proxy"="http://my.proxy.org:9999")
 listMarts()
