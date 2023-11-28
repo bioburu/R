@@ -9,6 +9,7 @@ matrix$Gene
 matrix$Gene<-sub('\\..*','',matrix$Gene)
 matrix$Gene
 geneid <- matrix$Gene
+#---set host to https://useast.ensembl.org or https://uswest.ensembl.org
 #---------------------------------------------------------------------
 #head(listMarts(host='https://www.ensembl.org'),10)
 #head(biomaRt::listDatasets(biomaRt::useMart("ENSEMBL_MART_ENSEMBL", host = "https://www.ensembl.org")), 10)     
