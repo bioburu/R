@@ -10,7 +10,8 @@ str(matrix)
 matrix<-round(matrix)
 #-------------------------------------------------------------------------------
 names<-c('Norm_1','Norm_2','Norm_3','TAA_1','TAA_2','TAA_3')
-condition<-c('Normal','Normal','Normal','Tumor','Tumor','Tumor')
+#-----set conditions to A and B. A will be the reference condition. 
+condition<-c('A','A','A','B','B','B')
 type<-c('paired','paired','paired','paired','paired','paired')
 coldata<-data.frame(cbind(names,condition,type))
 row.names(coldata)<-coldata$names
