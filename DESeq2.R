@@ -1,4 +1,5 @@
 library(DESeq2)
+library(pheatmap)
 setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals')
 matrix<-read.csv('gene.list_ordered.csv')
 matrix<-matrix[,-c(2:7)]
@@ -31,3 +32,11 @@ df$`row.names(df)`<-sub('\\..*','',df$`row.names(df)`)
 colnames(df)[1]<-'Gene'
 df<-df[-c(20328:115163),]
 write.csv(df,file = 'DESeq2_out.csv')
+#----------------------
+X<-c('Tgfb2','Tgfb3','Prkag2','Sirt1','Pik3cd','Foxo3',
+     'Ccnb1','Ccnb2','Ccng2','Rbl2','Plk1','Gadd45g',
+     'S1pr1','FbxO32')
+hmap<-pheatmap(matrix[c('Tgfb2','Tgfb3','Prkag2','Sirt1','Pik3cd','Foxo3',
+                        'Ccnb1','Ccnb2','Ccng2','Rbl2','Plk1','Gadd45g',
+                        'S1pr1','FbxO32'),],scale = 'row',border_color = 'black',fontsize = 7,color = c('yellow','orange','red'))
+hmap
