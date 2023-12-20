@@ -33,7 +33,7 @@ data<-cluster_enriched_terms(test)
 term_gene_graph(test)
 term_gene_graph(test,num_terms = c(5),use_description = TRUE)
 enrichment_chart(test, plot_by_cluster = TRUE)
-
+data<-data[order(data$highest_p), ]
 #write.csv(data,file = 'mmu_KEGG_results.csv')
 break 
 #----for individual cluster plots
