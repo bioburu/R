@@ -9,30 +9,54 @@ library(caret)
 library(InformationValue)
 library(pROC)
 library(ROCR)
-setwd()
-features_path <- 'genes.tsv'
-barcodes_path <- 'barcodes.tsv'
-matrix_path <- 'matrix.mtx'
+setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE207921_h9.nsc_scRNAseq')
+features_path <- 'GSM6322990_Stage_I_Exp1_features.tsv.gz'
+barcodes_path <- 'GSM6322990_Stage_I_Exp1_barcodes.tsv.gz'
+matrix_path <- 'GSM6322990_Stage_I_Exp1_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-x <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'adjacent')
+x <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'Day13')
+summary(x@active.ident)
+x<-subset(x = x, downsample = 3160)
 summary(x@active.ident)
 #---------------------------------------------------------------------------
-setwd()
-features_path <- 'genes.tsv'
-barcodes_path <- 'barcodes.tsv'
-matrix_path <- 'matrix.mtx'
+setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE207921_h9.nsc_scRNAseq')
+features_path <- 'GSM6322991_Stage_II_Exp1_features.tsv.gz'
+barcodes_path <- 'GSM6322991_Stage_II_Exp1_barcodes.tsv.gz'
+matrix_path <- 'GSM6322991_Stage_II_Exp1_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-y <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'HCC')
-summary(y@active.ident)
+x1 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'Day21')
+summary(x1@active.ident)
+x1<-subset(x = x1, downsample = 3160)
+summary(x1@active.ident)
 #---------------------------------------------------------------------------
-data<-merge(x,y=c(y),project='')
+setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE207921_h9.nsc_scRNAseq')
+features_path <- 'GSM6322993_Stage_III_Exp2_features.tsv.gz'
+barcodes_path <- 'GSM6322993_Stage_III_Exp2_barcodes.tsv.gz'
+matrix_path <- 'GSM6322993_Stage_III_Exp2_matrix.mtx.gz'
+matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
+x2 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'Day30')
+summary(x2@active.ident)
+x2<-subset(x = x2, downsample = 3160)
+summary(x2@active.ident)
+#-------------------------------------------------------------------------------
+setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE207921_h9.nsc_scRNAseq')
+features_path <- 'GSM6322995_Stage_IV_Exp3_features.tsv.gz'
+barcodes_path <- 'GSM6322995_Stage_IV_Exp3_barcodes.tsv.gz'
+matrix_path <- 'GSM6322995_Stage_IV_Exp3_matrix.mtx.gz'
+matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
+x3 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'Day45')
+summary(x3@active.ident)
+x3<-subset(x = x3, downsample = 3160)
+summary(x3@active.ident)
+#-------------------------------------------------------------------------------
+data<-merge(x,y=c(x1,x2,x3),project='h9.esc_timepoints')
 table(data@meta.data$orig.ident)
 head(data@active.ident)
-rm(x,y)
+rm(x,x1,x2,x3,matrix)
 gc()
 data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^MT-")
 VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
-data <- subset(data, subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & percent.mt <25)
+data <- subset(data, subset = nFeature_RNA > 200 & nFeature_RNA < 11000 & percent.mt <15)
 VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
 FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + geom_smooth()
 data <- NormalizeData(data)
@@ -49,13 +73,37 @@ data <- ScaleData(data, features = all.genes)
 gc()
 dim(data)
 data <- RunPCA(data, features = VariableFeatures(object = data))
+data <- RunUMAP(data, dims = 1:30)
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
-table(data@meta.data$orig.ident)
-rm(matrix)
-gc()
-VlnPlot(data, features = c('PTPRC','CD19','TRAC','CD14','MILR1'),cols = c('red','grey'))
+DimPlot(data, reduction = "pca",dims = c(1,2))
+break
+FeatureScatter(data, feature1 = "NES", feature2 = "MYC")
+DimPlot(data, reduction = 'umap',cols = c('grey','black','skyblue','red'))
+cat('One day after passaging, the culture medium of hESCs was changed to the neural induction medium (NIM) that containing DMEM/F12, 1×N2 supplement (Gibco), and 1×NEAA, with the addition of SHH (C25II, R&D Systems, 500 ng/ml), CHIR99021 (Tocris, 0.4μM), DMH-1 (Tocris, 2 μM), and SB431542 (Stemgent, 2 μM) for 8 days (Day1 to Day9). On day 9, singular colonies were blown off gently and transferred to 6-well dish coated with fresh MEFs in NIM with the addition of SHH (100 ng/ml), SAG (Millipore, 1 μM), and CHIR99021 (0.4μM) for 4 days until stage I (Day 13). At stage I, singular colonies were blown off gently and transferred to non-adherent 25 ml dish cultured in suspension medium containing NIM with the addition of SHH (20 ng/ml), SAG (Millipore, 0.5 μM), and FGF8b (PeproTech, 100 ng/ml) for 8 days until stage II (Day21). From stage II to stage III (Day 30), the neuro-spheres were allowed to continue differentiating and proliferating in the suspension medium containing NIM with the addition of SHH (20 ng/ml), and FGF8b (20 ng/ml). At stage III, the neuro-spheres were dissociated by Accutase (Innovative Cell Technologies) at 37°C for 6 minutes and then replated onto the 24-well dish coated with Matrigel (BD Biosciences). From stage III to stage IV (Day 45), the differentiated cells were fed on neural differentiation medium (NDM) containing neurobasal medium, 1×N2 supplement (Gibco), and 1×B27 (Life Technologies) with the addition of brain-derived neurotrophic factor (BDNF, Peprotech, 10 ng/ml), glial-derived neurotrophic factor (GDNF, peprotech, 10 ng/ml), transforming growth factorβ3 (TGFβ3, R&D Systems, 1 ng/ml), ascorbic acid (AA, Sigma-Aldrich, 200 μM),cAMP(Sigma-Aldrich, 1 μM), and Compound E (Calbiochem, 1 μM).')
+FeaturePlot(data, features = c('NES','NEUROD1','MKI67','PCDH9'),reduction = 'umap',cols = c('grey','red'))
+VlnPlot(data, features = c('NES','NEUROD1','MKI67','PCDH9'))
+RidgePlot(data, feature = c('NES','NEUROD1','MKI67','PCDH9'))
+DoHeatmap(data, features = c('NES','NEUROD1','MKI67','PCDH9'))
+data<-JoinLayers(data)
+day45 <- FindMarkers(data, ident.1 = 'Day45',logfc.threshold = 1.5,min.pct = 0.5)
+head(day45,n=2000)
+View(day45)
+#-------------------------------------------------------------------------------
+#---If clustering 
+#devtools::install_github('immunogenomics/presto')
+data <- FindNeighbors(data, dims = 1:30)
+data <- FindClusters(data)
+cluster1.markers <- FindMarkers(data, ident.1 = 1)
+head(cluster1.markers,n=200)
+#-------------------------------------------------------------------------------
+#-------Paired cluster comparisons
+x<-FindMarkers(data, ident.1 = '2', ident.2 = '1', 
+               features = c(top1000),logfc.threshold=1,min.pct1=1,
+               max.pct2=0.0001,only.pos = TRUE)
+VlnPlot(data, features = c(row.names(x)[1:12]),cols = c('grey','red'),idents = c(1,2))
+break 
 #----------Isolate CD45+  -------------------------------------
 data$CD45.groups <- 'CD45.pos'
 data$CD45.groups[WhichCells(data, expression= PTPRC < 0.1)] <- 'CD45.neg'
@@ -101,7 +149,7 @@ VlnPlot(data, features = c('MILR1'),cols = c())
 DimPlot(data,dims = c(1,2),reduction = 'pca',cols = c(),pt.size = 0.5)
 table(data@meta.data$orig.ident)
 #----------------------------------------------------
-setwd('/home/amp_prog/Desktop/models/GSE242889_liver_cancer')
+setwd()
 list<-read.csv('gene_list.csv')
 gene_list<-list$x
 #----split data
@@ -161,7 +209,4 @@ logLik(model)
 caret::confusionMatrix(pred_factor, actual,positive='1')
 table(data@meta.data$orig.ident)
 table(test$ident)
-break 
-VlnPlot(data, features = c('CD163','MRC1','FCGR3A'),cols = c('grey','red'))
-FindMarkers(data, ident.1 = 'HCC', ident.2 = 'adjacent', features = c('CD163','MRC1','FCGR3A'))
-VlnPlot(data, features = c('DDX58','IFIH1','NFKB1'),cols = c('grey','red'))
+break
