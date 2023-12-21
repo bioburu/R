@@ -9,16 +9,14 @@ library(caret)
 library(InformationValue)
 library(pROC)
 library(ROCR)
-setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/alignments/finals')
-matrix<-read.csv('gene.list_unordered.csv')
-matrix<-matrix[order(matrix$Gene), ]
-row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
-matrix<-matrix[,-c(1:7)]
-colnames(matrix)[2]<-'Norm_2'
-#remove all none expressing genes
-matrix<-filter(matrix,Norm_1>0,Norm_2>0,Norm_3>0,TAA_1>0,TAA_2>0,TAA_3>0)
-#
-data <- CreateSeuratObject(counts=matrix,project = 'TAA')
+library(readxl)
+setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE154958_GBM_dura_NSC')
+matrix<-read_excel('GSE154958_cell_culture_star_counts.xlsx')
+matrix<-data.frame(matrix)
+str(matrix)
+row.names(matrix)<-make.names(matrix$Gene.Symbol,unique = TRUE)
+matrix<-matrix[,-c(1)]
+data <- CreateSeuratObject(counts=matrix,project = 'gbm')
 gc()
 data@active.ident
 table(data@active.ident)
@@ -38,35 +36,27 @@ gc()
 data <- ScaleData(data, features = all.genes)
 gc()
 dim(data)
-dim(data)
-data <- RunPCA(data,npcs = 5, features = VariableFeatures(object = data))
-DimHeatmap(data, dims = 1:5, cells = 500, balanced = T)
+data <- RunPCA(data, features = VariableFeatures(object = data))
+DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
 table(data@meta.data$orig.ident)
 #------------------------------------------
-x<-FindMarkers(data, ident.1 = 'TAA', ident.2 = 'Norm', 
-               features = c(top1000),logfc.threshold=1,min.pct1=1,
-               max.pct2=0.0001,only.pos = TRUE,test.use = 'negbinom')
-#x<-FindMarkers(data, ident.1 = 'TAA',ident.2 = 'Norm',
-#               features = c(top1000),test.use='negbinom')
-#x<-x[-c(215:997),]
-x<-cbind(row.names(x),x)
-colnames(x)[1]<-'Gene'
-matrix2<-read.csv('gene.list_unordered.csv')
-row.names(matrix2)<-make.names(matrix2$Gene,unique = TRUE)
-matrix2<-matrix2[,-1]
-matrix2<-cbind(row.names(matrix2),matrix2)
-colnames(matrix2)[1]<-'Gene'
-df<-merge(x,matrix2,by='Gene')
-df<-df[order(df$avg_log2FC, decreasing=TRUE),]
+x<-FindMarkers(data, ident.1 = 'GBM', ident.2 = 'NSC', 
+               features = c(top1000),logfc.threshold=2,
+               only.pos = FALSE,test.use = 'DESeq2',min.pct = 0.5)
+VlnPlot(data,features = c(rownames(x)[1:12]),cols = c('grey','red','grey','red'))
+VlnPlot(data,features = c(rownames(x)[37:48]),cols = c('grey','red','grey','red'))
+
+VlnPlot(data,features = c('NEUROD1','SCG2','PMP2','GFAP','MLC1','TIMP4',
+                          'NOTCH1','PROM1','THRA','THRB','DIO2','DIO3','NCAM1','FOXO1','FOXG1','MKI67'),cols = c('grey','red','grey','red'))
+FindMarkers(data, ident.1 = 'GBM', ident.2 = 'NSC', features = c('NEUROD1','SCG2','PMP2','GFAP','MLC1','TIMP4',
+                                                                 'NOTCH1','PROM1','THRA','THRB','DIO2','DIO3','NCAM1','FOXO1','FOXG1','MKI67'),test.use = 'negbinom')
+x<-subset(x,p_val_adj< 0.01)
+downreg<-subset(x,avg_log2FC< -1.5)
+upreg<-subset(x,avg_log2FC> 1.5)
+df<-rbind(upreg,downreg)
+df<-cbind(row.names(df),df)
 break
-out<-df
-out$Gene
-out$Gene<-sub('\\..*','',out$Gene)
-out$Gene
-#write.csv(out,file = 'most_sig_genes.csv')
-break 
-VlnPlot(data, features = c(row.names(x)[1:12]),cols = c('grey','red'))
-FindMarkers(data, ident.1 = 'TAA', ident.2 = 'Norm', features = c(row.names(x)[1:12]),test.use = 'negbinom')
+write.csv(x,file = 'GSE154958_gbm_dura.csv')
 
