@@ -15,7 +15,7 @@ head(matrix)
 matrix<-filter(matrix,Norm_1>0,Norm_2>0,Norm_3>0,TAA_1>0,TAA_2>0,TAA_3>0)
 head(matrix)
 #-------------------------------------------------------------------------------
-names<-c('Norm_1','Norm_2','Norm_3','TAA_1','TAA_2','TAA_3')
+names<-colnames(matrix)
 condition<-c('A','A','A','B','B','B')
 type<-c('paired','paired','paired','paired','paired','paired')
 coldata<-data.frame(cbind(names,condition,type))
