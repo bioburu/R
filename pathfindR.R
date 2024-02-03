@@ -41,4 +41,6 @@ visualize_terms(result_df = data,
                 hsa_KEGG = FALSE,
                 pin_name_path = 'mmu_STRING')
 
-
+#----------------------
+fishers exact test can be performed to confirm cluster enrichements using a contingency table 
+https://carpentries-incubator.github.io/bioc-rnaseq/06-gene-set-analysis.html
