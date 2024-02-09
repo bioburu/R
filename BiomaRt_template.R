@@ -47,4 +47,7 @@ matrix<-data.frame(matrix)
 str(matrix)
 break
 write.csv(matrix,file = 'exosomes_rnaseq_run2.csv')
-
+#----if using older mm10 mouse assembly
+ensembl<-useEnsembl(biomart = 'genes',
+                    dataset = 'mmusculus_gene_ensembl',
+                    version=102)
