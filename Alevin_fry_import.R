@@ -4,6 +4,8 @@ library(SummarizedExperiment)
 library(biomaRt)
 library(dplyr)
 library(Seurat)
+library(Matrix)
+library(readr)
 files<-'/home/deviancedev/Desktop/drive_jan2024/FCCC/scRNAseq_test/SRR27442073/mm10_quant'
 x<-loadFry(files,outputFormat = 'scRNA',nonzero = FALSE,quiet = FALSE)
 x
@@ -50,7 +52,14 @@ gc()
 colnames(Ftable)[1] <- c('ensembl_id')
 rm(attributes,counts,df,ensembl,filters,genes,matrix,x)
 gc()
-DF<-Ftable[!duplicated(Ftable$external_gene_name), ]
-break
+Ftable<-Ftable[!duplicated(Ftable$external_gene_name), ]
 setwd('/home/deviancedev/Desktop/drive_jan2024/FCCC/scRNAseq_test/SRR27442073')
-write.csv(Ftable,file = 'GSM8004749.Sciatic.nerve.CD45p.spon.autoimmune.neuropathy.csv')
+#write.csv(Ftable,file = 'GSM8004749.Sciatic.nerve.CD45p.spon.autoimmune.neuropathy.csv')
+features<-Ftable[,c(1:2)]
+matrix.mtx<-Ftable[,-c(1:7)]
+matrix.mtx<-as(matrix.mtx,'sparseMatrix')
+barcodes<-data.frame(colnames(Ftable)[8:8800])
+setwd('/home/deviancedev/Desktop/drive_jan2024')
+write_tsv(features,file='features.tsv',col_names = NA)
+write_tsv(barcodes,file='barcodes.tsv',col_names = NA)
+writeMM(matrix.mtx,file='matrix.mtx')
