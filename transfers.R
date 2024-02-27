@@ -1,38 +1,138 @@
+
 library(Seurat)
-library(tidyverse)
-library(dplyr)
+library(Signac)
+library(EnsDb.Hsapiens.v86)
 library(ggplot2)
-library(ggridges)
-library(caTools)
-library(car)
-library(caret)
-library(InformationValue)
-library(pROC)
-library(ROCR)
-library(readxl)
-#----extract all genes expressed in tumor tissues
-tumors<-read.csv('/home/deviancedev/Desktop/drive_jan2024/FCCC/exosome_exp/bulk_tissue/csv_results/bulk_tissues_biomart.csv')
-tumors<-tumors[,-c(2:12)]
-colnames(tumors)<-c('Gene','tumor_1','tumor_2','tumor_3')
-tumors<-filter(tumors,tumor_1>2000,tumor_2>2000,tumor_3>2000)
-#----extract all genes expressed in tumor-tissue exosomes
-t_exosomes<-read.csv('/home/deviancedev/Desktop/drive_jan2024/FCCC/exosome_exp/exosomes/csv_results/exosomes_biomart.csv')
-t_exosomes<-t_exosomes[,-c(2:21)]
-colnames(t_exosomes)<-c('Gene','tumor_1','tumor_2','tumor_3')
-t_exosomes<-filter(t_exosomes,tumor_1>2000,tumor_2>2000,tumor_3>2000)
-#---test overlaps
-x<-semi_join(tumors,t_exosomes,by=c('Gene'))
-library(ggVennDiagram)
-venn<-list(tumors$Gene,t_exosomes$Gene)
-ggVennDiagram(venn,category.names = c(' ',' '),
-              label = 'both',set_color = 'red',edge_size = 1,
-              label_size = 4,label_alpha = 0)+scale_fill_distiller(palette='Set3')+
-  labs(title='')
-#-----find overlapping genes
-df<-merge(tumors,t_exosomes,by=c('Gene'))
-df$Gene<-sub('\\..*','',df$Gene)
-setwd('/home/deviancedev/Desktop/drive_jan2024/FCCC/exosome_exp/exosomes/csv_results')
-#write.csv(df,file='global_transcript_comparison.csv')
+library(cowplot)
+#---ATAC FILE MUST BE SPARSE MATRIX when cleaning
+#load(file = '/home/deviancedev/Desktop/scATACseq/pbmcMultiome.SeuratData/data/pbmc.rna.rda')
+gc()
+#---convert into Assay5 obj
+#pbmc.rna
+#pbmc.rna[['RNA']]<-as(pbmc.rna[['RNA']],Class = 'Assay5')
+#head(pbmc.rna@meta.data)
+#---filter out 'filtered' category
+#pbmc.rna<-subset(pbmc.rna,seurat_annotations!='filtered')
+#head(pbmc.rna@meta.data)
+#pbmc.rna <- NormalizeData(pbmc.rna)
+#pbmc.rna <- FindVariableFeatures(pbmc.rna)
+#pbmc.rna <- ScaleData(pbmc.rna)
+#pbmc.rna <- RunPCA(pbmc.rna)
+#pbmc.rna <- RunUMAP(pbmc.rna, dims = 1:30)
+gc()
+#VlnPlot(pbmc.rna,features = c('PTPRC','CD3D'))
+#DimPlot(pbmc.rna,group.by = 'seurat_annotations',label = TRUE)+ggtitle('scRNAseq')
+#-------------------------------------------------------------------------------
+load(file = '/home/deviancedev/Desktop/scATACseq/pbmcMultiome.SeuratData/data/pbmc.atac.rda')
+head(pbmc.atac@meta.data)
+#---remove 'filtered' category from annotations
+pbmc.atac<-subset(pbmc.atac,seurat_annotations!='filtered')
+head(pbmc.atac@meta.data)
+# We exclude the first dimension as this is typically correlated with sequencing depth
+#---normalized by term-frequency inverse-document-frequency
+pbmc.atac <- RunTFIDF(pbmc.atac)
+#----find top features based on number counts/feature
+#---q0 denotes top 100% of most common features
+pbmc.atac <- FindTopFeatures(pbmc.atac, min.cutoff = "q0")
+#---apply Singular Value Decomposion to matrix
+pbmc.atac <- RunSVD(pbmc.atac)
+#---umap 
+pbmc.atac <- RunUMAP(pbmc.atac, reduction = "lsi", dims = 2:30, reduction.name = "umap.atac", reduction.key = "atacUMAP_")
+head(pbmc.atac)
 break 
+#DimPlot(pbmc.atac,group.by = 'seurat_annotations',label = TRUE)+ggtitle('scATACseq')
+DimPlot(pbmc.atac,label = TRUE)+ggtitle('scATACseq')
+# ATAC analysis add gene annotation information
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+head(annotations)
+#--change chromosome annotation style 
+seqlevelsStyle(annotations) <- "UCSC"
+#---reassign genome annotations if necessary
+genome(annotations) <- "hg38"
+genome(annotations)
+head(data.frame(pbmc.atac[['ATAC']]$counts))
+
+break 
+pbmc.atac@meta.data
+#---add annotations to atac file
+Annotation(pbmc.atac) <- annotations
+p1 <- DimPlot(pbmc.rna, group.by = "seurat_annotations", label = TRUE) + NoLegend() + ggtitle("RNA")
+p2 <- DimPlot(pbmc.atac, group.by = "orig.ident", label = FALSE) + NoLegend() + ggtitle("ATAC")
+p1 + p2
+# get most variable gene activity from the RNAseq file of the ATACseq file
+gene.activities <- GeneActivity(pbmc.atac, features = VariableFeatures(pbmc.rna))
+gc()
+View(data.frame(gene.activities))
+Annotation(pbmc.atac)
+# add gene activities as a new assay
+pbmc.atac[["ACTIVITY"]] <- CreateAssayObject(counts = gene.activities)
+# normalize gene activities
+DefaultAssay(pbmc.atac) <- "ACTIVITY"
+pbmc.atac@assays$ACTIVITY
+pbmc.atac <- NormalizeData(pbmc.atac)
+pbmc.atac <- ScaleData(pbmc.atac, features = rownames(pbmc.atac))
+
+# Identify anchors
+transfer.anchors <- FindTransferAnchors(reference = pbmc.rna, query = pbmc.atac, features = VariableFeatures(object = pbmc.rna),
+                                        reference.assay = "RNA", query.assay = "ACTIVITY", reduction = "cca")
+gc()
+#----predict subsets of ATAC data using anchors from RNA data
+celltype.predictions <- TransferData(anchorset = transfer.anchors, refdata = pbmc.rna$seurat_annotations,
+                                     weight.reduction = pbmc.atac[["lsi"]], dims = 2:30)
+View(celltype.predictions)
+#---add cell type predictions to ATAC metadata
+pbmc.atac <- AddMetaData(pbmc.atac, metadata = celltype.predictions)
+head(pbmc.atac@meta.data)
+
+break 
+#---add annotation_correct=TRUE/FALSE to ATAC metadata
+#---only works if using Multiome kits
+pbmc.atac$annotation_correct <- pbmc.atac$predicted.id == pbmc.atac$seurat_annotations
+head(pbmc.atac@meta.data)
 
 
+p1 <- DimPlot(pbmc.atac, group.by = "predicted.id", label = TRUE) + NoLegend() + ggtitle("Predicted annotation")
+p2 <- DimPlot(pbmc.atac, group.by = "seurat_annotations", label = TRUE) + NoLegend() + ggtitle("Ground-truth annotation")
+p1 | p2
+
+predictions <- table(pbmc.atac$seurat_annotations, pbmc.atac$predicted.id)
+predictions <- predictions/rowSums(predictions)  # normalize for number of cells in each cell type
+predictions <- as.data.frame(predictions)
+p1 <- ggplot(predictions, aes(Var1, Var2, fill = Freq)) + geom_tile() + scale_fill_gradient(name = "Fraction of cells",
+                                                                                            low = "#ffffc8", high = "#7d0025") + xlab("Cell type annotation (RNA)") + ylab("Predicted cell type label (ATAC)") +
+  theme_cowplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+p1
+
+
+break 
+correct <- length(which(pbmc.atac$seurat_annotations == pbmc.atac$predicted.id))
+incorrect <- length(which(pbmc.atac$seurat_annotations != pbmc.atac$predicted.id))
+data <- FetchData(pbmc.atac, vars = c("prediction.score.max", "annotation_correct"))
+p2 <- ggplot(data, aes(prediction.score.max, fill = annotation_correct, colour = annotation_correct)) +
+  geom_density(alpha = 0.5) + 
+  theme_cowplot() + 
+  scale_fill_discrete(name = "Annotation Correct",labels = c(paste0("FALSE (n = ", incorrect, ")"),paste0("TRUE (n = ", correct, ")"))) + 
+  scale_color_discrete(name = "Annotation Correct",labels = c(paste0("FALSE (n = ", incorrect, ")"), paste0("TRUE (n = ", correct, ")"))) + 
+  xlab("Prediction Score")
+p1 + p2
+#
+View(data.frame(pbmc.atac[['ATAC']]$counts))
+break 
+predictions <- table(pbmc.atac$seurat_annotations, pbmc.atac$predicted.id)
+predictions
+predictions <- predictions/rowSums(predictions)  # normalize for number of cells in each cell type
+predictions
+predictions <- as.data.frame(predictions)
+predictions
+p1 <- ggplot(predictions, aes(Var1, Var2, fill = Freq)) + geom_tile() + scale_fill_gradient(name = "Fraction of cells",
+    low = "#ffffc8", high = "#7d0025") + xlab("Cell type annotation (RNA)") + ylab("Predicted cell type label (ATAC)") +
+    theme_cowplot() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+correct <- length(which(pbmc.atac$seurat_annotations == pbmc.atac$predicted.id))
+incorrect <- length(which(pbmc.atac$seurat_annotations != pbmc.atac$predicted.id))
+data <- FetchData(pbmc.atac, vars = c("prediction.score.max", "annotation_correct"))
+p2 <- ggplot(data, aes(prediction.score.max, fill = annotation_correct, colour = annotation_correct)) +
+    geom_density(alpha = 0.5) + theme_cowplot() + scale_fill_discrete(name = "Annotation Correct",
+    labels = c(paste0("FALSE (n = ", incorrect, ")"), paste0("TRUE (n = ", correct, ")"))) + scale_color_discrete(name = "Annotation Correct",
+    labels = c(paste0("FALSE (n = ", incorrect, ")"), paste0("TRUE (n = ", correct, ")"))) + xlab("Prediction Score")
+p1 + p2
