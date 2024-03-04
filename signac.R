@@ -3,14 +3,14 @@
 library(Signac)
 library(Seurat)
 library(EnsDb.Mmusculus.v79)
-counts<-readRDS('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324456/batch1/sparse_matrix.rds')
+counts<-readRDS('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324458/batch3/sparse_matrix.rds')
 colnames(counts)
 row.names(counts)
 cat('sort -k1,1 -k2,2n -k3,3n fragments.bed >fragments.sorted.bed')
 cat('bgzip fragments.sorted.bed')
 cat('tabix -p bed fragments.sorted.bed.gz')
 cat('convert all bed files to tsv')
-fragment<-file.path('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324456/batch1/fragments.sorted.tsv.gz')
+fragment<-file.path('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324458/batch3/fragments.sorted.tsv.gz')
 chrom_assay <- CreateChromatinAssay(
   counts = counts,
   sep = c(":", "-"),
@@ -109,5 +109,7 @@ x<-FindMarkers(data, ident.1 = '1', ident.2 = '0',
                features = c(top1000),test.use='negbinom')
 VlnPlot(data, features = c('Ptprc','Cd19','Cd22','Ncam1','Cd8a','Ifng','Il4','Cd3d','Il12rb1'),cols = c())
 break
-saveRDS(data, file = "batch1.rds")
-data<-readRDS('batch1.rds')
+setwd('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324458/batch3')
+saveRDS(data, file = "batch3.rds")
+data<-readRDS('batch3.rds')
+
