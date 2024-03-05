@@ -3,25 +3,30 @@
 library(Signac)
 library(Seurat)
 library(EnsDb.Mmusculus.v79)
-counts<-readRDS('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324458/batch3/sparse_matrix.rds')
-colnames(counts)
-row.names(counts)
-cat('sort -k1,1 -k2,2n -k3,3n fragments.bed >fragments.sorted.bed')
-cat('bgzip fragments.sorted.bed')
-cat('tabix -p bed fragments.sorted.bed.gz')
-cat('convert all bed files to tsv')
-fragment<-file.path('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324458/batch3/fragments.sorted.tsv.gz')
+fragment<-file.path('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/geo_results/GSM6736815_IL1218_Neo_fragments.tsv.gz')
+total_counts <- CountFragments(fragment)
+head(total_counts)
+summary(total_counts$frequency_count)
+cutoff <- 1000 
+barcodes <- total_counts[total_counts$frequency_count > cutoff, ]$CB
+head(barcodes)
+frags <- CreateFragmentObject(path = fragment, cells = barcodes)
+frags
+peaks <- CallPeaks(frags,macs2.path = '/home/em_b/anaconda3/bin/macs3')
+peaks
+counts <- FeatureMatrix(fragments = frags, features = peaks, cells = barcodes)
+head(counts)
 chrom_assay <- CreateChromatinAssay(
   counts = counts,
   sep = c(":", "-"),
-  fragments = fragment,
+  fragments = frags,
   min.cells = 10,
   min.features = 200,
   genome = 'mm10')
 data <- CreateSeuratObject(
-    counts = chrom_assay,
-    assay = 'ATAC',
-    project = 'scATAC')
+  counts = chrom_assay,
+  assay = 'ATAC',
+  project = 'scATAC')
 annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Mmusculus.v79)
 annotations
 seqlevels(annotations) <- paste0('chr', seqlevels(annotations))
@@ -108,8 +113,11 @@ FeaturePlot(
 x<-FindMarkers(data, ident.1 = '1', ident.2 = '0', 
                features = c(top1000),test.use='negbinom')
 VlnPlot(data, features = c('Ptprc','Cd19','Cd22','Ncam1','Cd8a','Ifng','Il4','Cd3d','Il12rb1'),cols = c())
+VlnPlot(data, features = c(row.names(x)[1:12]),cols = c())
+VlnPlot(data, features = c(row.names(x)[13:24]),cols = c())
+VlnPlot(data, features = c(row.names(x)[25:36]),cols = c())
 break
-setwd('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/SRR22324458/batch3')
-saveRDS(data, file = "batch3.rds")
-data<-readRDS('batch3.rds')
+setwd('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/geo_results')
+saveRDS(data, file = "geo.rds")
+data<-readRDS('geo.rds')
 
