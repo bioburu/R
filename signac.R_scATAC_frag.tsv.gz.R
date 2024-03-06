@@ -117,7 +117,7 @@ VlnPlot(data, features = c(row.names(x)[1:12]),cols = c())
 VlnPlot(data, features = c(row.names(x)[13:24]),cols = c())
 VlnPlot(data, features = c(row.names(x)[25:36]),cols = c())
 break
-setwd('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/geo_results')
+setwd('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/geo_results
 saveRDS(data, file = "geo.rds")
 data<-readRDS('geo.rds')
 
