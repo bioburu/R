@@ -11,7 +11,7 @@ library(caret)
 library(InformationValue)
 library(pROC)
 library(ROCR)
-fragment<-file.path('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/test/fragments.sorted.bed.gz')
+fragment<-file.path('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/my_results/fragments.sorted.bed.gz')
 total_counts <- CountFragments(fragment)
 head(total_counts)
 summary(total_counts$frequency_count)
@@ -116,7 +116,7 @@ matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_pa
 rna <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'rna')
 summary(rna@active.ident)
 gc()
-rna[["percent.mt"]] <- PercentageFeatureSet(rna, pattern = "^mt-")
+#rna[["percent.mt"]] <- PercentageFeatureSet(rna, pattern = "^mt-")
 VlnPlot(rna, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
 rna <- subset(rna, subset = nFeature_RNA > 200 & nFeature_RNA < 11000)# & percent.mt <15)
 VlnPlot(rna, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
@@ -154,7 +154,6 @@ levels(rna@meta.data$seurat_clusters)<-c('IFNhi1','IFNhi2','cMem3','Cytotoxic','
                                          'cMem1','cMem2','rMem','IFNlo2','IFNlo3','GZMA')
 rna@meta.data$seurat_clusters
 head(rna)
-break 
 new.cluster.ids <- c('IFNhi1','IFNhi2','cMem3','Cytotoxic','KI67hi','IFNGlo1',
                      'cMem1','cMem2','rMem','IFNlo2','IFNlo3','GZMA')
 names(new.cluster.ids) <- levels(rna)
@@ -173,28 +172,6 @@ atac <- AddMetaData(atac, metadata = celltype.predictions)
 p3<-DimPlot(atac, group.by = "predicted.id", label = TRUE,pt.size = 1) + ggtitle('RNA+ATAC')
 p1+p2+p3
 break 
-FeaturePlot(atac, features = c('Cd2','Cd27','Cd28','Cd38','Cd40','Cd40lg','Sell','Cd69','Cd247','Cd274','Pdcd1','CCR4','CCR6','CCR7','CXCR3','CCL22'))
-FeaturePlot(
-  object = atac,
-  features = c('Ifng','Nfkb2','Tnf','Lamp1','Lamp2','Gzmb','Gzma','Il1a'),
-  pt.size = 1,
-  max.cutoff = 'q95',
-  cols = c('grey','red'))
-DimPlot(object = rna, label = TRUE,pt.size = 2)
-x<-FindMarkers(data, ident.1 = '1', 
-               features = c(top1000),test.use='negbinom')
-VlnPlot(data, features = c(row.names(x)[1:12]),cols = c())
-VlnPlot(data, features = c(row.names(x)[13:24]),cols = c())
-VlnPlot(data, features = c(row.names(x)[25:36]),cols = c())
-FeaturePlot(
-  object = atac,
-  features = c('Nek6','Ksr1','C3','Tmem108','Arpp21','Reep1','Fes','Il18','Mrc1'),
-  pt.size = 1,
-  max.cutoff = 'q95',
-  ncol = 3,
-  cols = c('grey','red'))
-FeaturePlot(atac, features = c('Ptprc','Cd8a','Ifng','Il4','Cd3d','Il12rb1','Ttc39c','Gas7','Map6'))
-break
 setwd('/home/em_b/Desktop/FCCC/GSE218223_scATACseq_mouseCD8/my_results')
-saveRDS(data, file = "my.rds")
-data<-readRDS('my.rds')
+saveRDS(data, file = "")
+data<-readRDS('')
