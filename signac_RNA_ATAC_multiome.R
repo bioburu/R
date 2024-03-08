@@ -161,12 +161,12 @@ FeaturePlot(
   max.cutoff = 'q95',
   ncol = 3,
   cols = c('grey','red'))
+DimPlot(object = rna, label = TRUE,pt.size = 1)
 Idents(rna)
-levels(rna@meta.data$seurat_clusters)<-c('t_helper_cells','cytotoxic_t_cells','mono/macro','b_cells')
+levels(rna@meta.data$seurat_clusters)<-c('cytoxic_t_cells','t_helper_cells','mono/macro','b_cells')
 rna@meta.data$seurat_clusters
 head(rna)
-DimPlot(object = rna, label = TRUE,pt.size = 1)
-new.cluster.ids <- c('t_helper_cells','cytotoxic_t_cells','mono/macro','b_cells')
+new.cluster.ids <- c('cytotoxic_t_cells','t_helper_cells','mono/macro','b_cells')
 names(new.cluster.ids) <- levels(rna)
 rna <- RenameIdents(rna, new.cluster.ids)
 DimPlot(rna, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
@@ -174,18 +174,31 @@ head(atac)
 transfer.anchors <- FindTransferAnchors(reference = rna, query = atac, features = VariableFeatures(object = rna),
                                         reference.assay = "RNA", query.assay = "correlated_gene_activity", reduction = "cca")
 celltype.predictions <- TransferData(anchorset = transfer.anchors, refdata = rna$seurat_clusters,
-                                     weight.reduction = atac[["lsi"]], dims = 2:30)
+                                     weight.reduction = atac[["lsi"]], dims = 1:30)
 atac <- AddMetaData(atac, metadata = celltype.predictions)
-new.cluster.ids <- c('t_helper_cells','cytotoxic_t_cells','mono/macro','b_cells')
+head(atac)
+head(Idents(atac))
+head(Idents(rna))
+rna$seurat_clusters
+new.cluster.ids <- c('cytotoxic_t_cells','t_helper_cells','mono/macro','b_cells')
 names(new.cluster.ids) <- levels(atac)
 names(new.cluster.ids)
 new.cluster.ids
 levels(atac)
 Idents(atac)
 atac <- RenameIdents(atac, new.cluster.ids)
+head(Idents(atac))
+head(Idents(rna))
+DimPlot(object = atac, label = TRUE,pt.size = 1)
+rna_umap <- DimPlot(rna, label = TRUE,pt.size = 1,label.size = 8)+ ggtitle("gene_transcripts")
+atac_features<-FeaturePlot(atac,features = c('PTPRC','CD3D','CD4','ICD8A','IFNG','CD19',
+                              'CD22','CD86','ITGAX'),cols = c('grey','red'),pt.size = 2)
+atac_umap<-DimPlot(object = atac, label = TRUE,pt.size = 1,label.size = 8)
+rna_umap+atac_umap
+#-------------------------------------------------------------------
 peaks <- FindMarkers(
   object = atac,
-  ident.1 = 'b_cells',
+  ident.1 = 'mono/macro',
   test.use = 'negbinom',
   latent.vars = 'nCount_ATAC',
   logfc.threshold=1.5,
@@ -197,38 +210,20 @@ VlnPlot(
   features = rownames(peaks)[1:12],
   pt.size = 0.1,
   idents = c())
-p1 <- DimPlot(rna, label = TRUE,pt.size = 1,label.size = 8,cols = c('skyblue','grey','green','red'))+ NoLegend() + ggtitle("gene_transcripts")
-p2<-DimPlot(atac, group.by = "predicted.id", label = TRUE,pt.size = 1,label.size = 8,cols = c('red','grey','green','skyblue'))+ ggtitle('peak_enrichments')
-#new.cluster.ids <- c('t_helpers','cytotoxic_t_cells','mono/macro','b_cells')
-#names(new.cluster.ids) <- levels(atac)
-#atac <- RenameIdents(atac, new.cluster.ids)
-#Idents(atac)
-p3<-VlnPlot(
+ClosestFeature(atac,c('chr4-8409026-8410072'))
+p1<-CoveragePlot(
   object = atac,
-  features = c('chr4-8409026-8410072','chr19-50328790-50329663','chr20-40688826-40690327',
-               'chr12-119988470-119989522'),
-  pt.size = 0.1,
-  cols = c('skyblue','grey','green','red'))
-p1+p2
-p3
-ClosestFeature(atac,c('chr4-8409026-8410072','chr19-50328790-50329663','chr20-40688826-40690327',
-                      'chr12-119988470-119989522'))
-head(atac)
-CoveragePlot(
-  object = atac,
-  region = row.names(peaks)[5],
+  region = 'chr4-8409026-8410072',
   extend.upstream = 40000,
   extend.downstream = 20000)
-tile_plot <- TilePlot(
+p2 <- TilePlot(
   object = atac,
-  region = row.names(peaks)[5],
-  idents = c()
-)
-tile_plot
-atac
-ExpressionPlot(
+  region = 'chr4-8409026-8410072')
+p3<-ExpressionPlot(
   object = rna,
-  features = c("PAX5"))
+  features = c("ACOX3"))
+p1
+p2+p3
 break 
 #--------------------------------s
 saveRDS(rna,file = 'rna.rds')
