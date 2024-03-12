@@ -1,13 +1,33 @@
-head(rna)
-rna <- FindNeighbors(rna, dims = 1:30)
-rna <- FindClusters(rna)
-DimPlot(rna, reduction = "umap",dims = c(1,2))+ggtitle('scRNAseq')
-cluster.markers <- FindMarkers(rna, ident.1 = 0)
-head(cluster.markers,n=25)
-break 
-#---convert into Assay5 obj
-#pbmc.rna[['RNA']]<-as(pbmc.rna[['RNA']],Class = 'Assay5')
-# get most variable gene activity from the RNAseq file of the ATACseq file
-gene.activities <- GeneActivity(atac, features = VariableFeatures(rna))
+# https://bioconductor.org/books/devel/OHCA/pages/visualization.html
+library(ggplot2)
+library(GenomicRanges)
+library(InteractionSet)
+library(HiCExperiment)
+library(HiContactsData)
+library(HiContacts)
+library(rtracklayer)
+r1 <- HiContactsData(sample = 'yeast_wt', format = 'fastq_R1')
+View(r1)
+r2 <- HiContactsData(sample = 'yeast_wt', format = 'fastq_R2')
+r1
+r2
+library(HiCool)
+HiCool(
+  r1, 
+  r2, 
+  restriction = 'DpnII,HinfI', 
+  resolutions = c(4000, 8000, 16000), 
+  genome = 'R64-1-1', 
+  output = './HiCool/'
+)
+hic<-import('/Users/burudpc/Desktop/HiCool/matrices/test.mcool',
+            format = 'cool',
+            resolution=4000,
+            focus='XII')
+hic
+plotMatrix(hic)
+plotMatrix(hic,maxDistance=2000000)
+getLoops(hic)
 
-break 
+hic@topologicalFeatures$loops
+
