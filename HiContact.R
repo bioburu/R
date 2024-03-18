@@ -11,3 +11,4 @@ interaction_table<-data.frame(interactions(hic))
 summary(interaction_table$count)
 plotMatrix(hic)
 #https://jserizay.com/HiContacts/
+https://bioconductor.org/books/devel/OHCA/pages/principles.html
