@@ -24,3 +24,9 @@ HiCool(r1,
        build_report = TRUE,
        resolutions = c(1000,4000,8000,16000))
 break 
+
+try
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath 
+pipx install chromosight 
+chromosight -h 
