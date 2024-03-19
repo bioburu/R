@@ -1,4 +1,3 @@
-library(HiContactsData)
 library(ShortRead)
 library(HiCool)
 library(HiContacts)
