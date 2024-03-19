@@ -30,3 +30,5 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath 
 pipx install chromosight 
 chromosight -h 
+
+chromosight detect c241d99d5e2_7833^mapped-R64-1-1^LYRTWZ.mcool::resolutions/1000 results
