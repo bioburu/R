@@ -1,33 +1,29 @@
-# https://bioconductor.org/books/devel/OHCA/pages/visualization.html
-library(ggplot2)
-library(GenomicRanges)
-library(InteractionSet)
-library(HiCExperiment)
-library(HiContactsData)
-library(HiContacts)
-library(rtracklayer)
-r1 <- HiContactsData(sample = 'yeast_wt', format = 'fastq_R1')
-View(r1)
-r2 <- HiContactsData(sample = 'yeast_wt', format = 'fastq_R2')
-r1
-r2
+#https://jserizay.com/OHCA/docs/devel/pages/topological-features.html
+#library(ShortRead)
 library(HiCool)
-HiCool(
-  r1, 
-  r2, 
-  restriction = 'DpnII,HinfI', 
-  resolutions = c(4000, 8000, 16000), 
-  genome = 'R64-1-1', 
-  output = './HiCool/'
-)
-hic<-import('/Users/burudpc/Desktop/HiCool/matrices/test.mcool',
-            format = 'cool',
-            resolution=4000,
-            focus='XII')
+library(HiContacts)
+library(GenomicRanges)
+library(HiCExperiment)
+library(BiocParallel)
+#library(HiCcompare)
+#library(HiCDOC)
+library(WGCNA)
+library(ggplot2)
+library(patchwork)
+setwd('/Users/burudpc/Desktop')
+cf<-CoolFile('twofiles^mapped-mm10^CCP6TK.mcool')
+pairs_file<- PairsFile('/Users/burudpc/Desktop/twofiles^mapped-mm10^CCP6TK.pairs')
+availableResolutions(cf)
+hic<-import(cf,
+            resolution=16000,
+            pairs=pairs_file,
+            format = 'mcool')
 hic
-plotMatrix(hic)
-plotMatrix(hic,maxDistance=2000000)
-getLoops(hic)
-
-hic@topologicalFeatures$loops
-
+#---annotate A/B compartments
+phasing_track<-BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+compts<-getCompartments(hic,chromosomes = 'chr1',genome = phasing_track)
+compts
+compartdf<-data.frame(topologicalFeatures(compts,'compartments'))
+plotSaddle(compts)
+metadata(compts)$eigens
+compts<-autocorrelate(compts)
