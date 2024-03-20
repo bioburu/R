@@ -10,6 +10,8 @@ library(BiocParallel)
 library(WGCNA)
 library(ggplot2)
 library(patchwork)
+library(GenomicRanges)
+library(rtracklayer)
 setwd('/Users/burudpc/Desktop')
 cf<-CoolFile('twofiles^mapped-mm10^CCP6TK.mcool')
 pairs_file<- PairsFile('/Users/burudpc/Desktop/twofiles^mapped-mm10^CCP6TK.pairs')
@@ -23,7 +25,10 @@ hic
 phasing_track<-BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
 compts<-getCompartments(hic,chromosomes = 'chr1',genome = phasing_track)
 compts
-compartdf<-data.frame(topologicalFeatures(compts,'compartments'))
+#compartdf<-data.frame(topologicalFeatures(compts,'compartments'))
 plotSaddle(compts)
 metadata(compts)$eigens
+coverage(metadata(compts)$eigens, weight = 'eigen') |> export('hic_eigen.bw')
+topologicalFeatures(compts, "compartments") |> export('hic_compartments.gff3')
+break 
 compts<-autocorrelate(compts)
