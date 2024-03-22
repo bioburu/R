@@ -15,7 +15,7 @@ r2<-file.path('SRR21038697filtered_R2.part_001.fastq.gz')
 #head(x2@sread)
 HiCool(r1,
        r2,
-       restriction = 'DpnII',
+       restriction = 'DpnII,HinfI',
        genome = 'mm10',
        threads = 22,
        exclude_chr = 'Mito|chrM|MT',
