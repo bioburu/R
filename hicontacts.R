@@ -54,7 +54,7 @@ plotMatrix(hic,
            scale = 'log10',
            #limits = c(-1, 1),
            #cmap = bwrColors(),
-           caption = TRUE,
+           caption = FALSE,
            loops=loops,
            borders=borders,
            symmetrical=TRUE,
@@ -75,34 +75,61 @@ anno <- addGeneIDs(anno, orgAnn="org.Mm.eg.db",
                    feature_id_type="ensembl_gene_id",
                    IDs2Add=c("symbol"))
 anno
-enrichme<-data.frame(anno$symbol)
+gene_interactions<-data.frame(anno)
+Gene_symbols<-gene_interactions$symbol
+head(Gene_symbols)
+q_values<-gene_interactions$qvalue
+head(q_values)
+enrichme<-data.frame(cbind(Gene_symbols,q_values))
 enrichme<-na.omit(enrichme)
-enrichme
+enrichme$q_values<-as.numeric(enrichme$q_values)
+head(enrichme)
+str(enrichme)
+
 #write.csv(enrichme,file = 'test.csv')
+#------get gene sets
+gene_list <- fetch_gene_set(
+  gene_sets = "mmu_KEGG",
+  min_gset_size = 10,
+  max_gset_size = 300)
+#------------------------------------------------------------------------
+mmu_kegg_gsets <- gene_list[[1]]
+head(mmu_kegg_gsets)
+#------------------------------------------------------------
+mmu_kegg_descriptions <- gene_list[[2]]
+head(mmu_kegg_descriptions)
+#matrix<-matrix[,-2]
+test<-run_pathfindR(
+  input = enrichme,
+  gene_sets = 'mmu_KEGG',
+  convert2alias = FALSE,
+  custom_genes = mmu_KEGG_gsets,
+  custom_descriptions = mmu_KEGG_descriptions,
+  pin_name_path = 'mmu_STRING'
+)
+data<-cluster_enriched_terms(test)
+term_gene_graph(test)
+term_gene_graph(test,num_terms = c(5),use_description = TRUE)
+enrichment_chart(test, plot_by_cluster = TRUE,top_terms = 20,num_bubbles = 8)
+data<-data[order(data$highest_p), ]
+#write.csv(data,file = 'bulk.tiss_mmu_KEGG_results.csv')
+#----for individual cluster plots
+#visualize_terms(result_df = data,
+#                hsa_KEGG = FALSE,
+#                pin_name_path = 'mmu_STRING')
+#visualize_term_interactions(data,
+#                            pin_name_path = 'mmu_STRING',
+#                            show_legend = FALSE)
+#----------------------
+#fishers exact test can be performed to confirm cluster enrichements using a contingency table 
+#https://carpentries-incubator.github.io/bioc-rnaseq/06-gene-set-analysis.html
+#--------------------------------------------------------
 break 
-cowplot::plot_grid(
-  plotMatrix(hic, use.scores = 'count', caption = FALSE),
-  plotMatrix(hic, use.scores = 'balanced', caption = FALSE),
-  plotMatrix(hic, use.scores = 'ICE', caption = FALSE), 
-  nrow = 1)
-cowplot::plot_grid(
-  plotMatrix(hic, use.scores = 'balanced', caption = FALSE),
-  plotMatrix(hic, use.scores = 'ICE', caption = FALSE),
-  plotMatrix(hic, use.scores = 'expected', caption = FALSE),
-  plotMatrix(hic, use.scores = 'detrended', caption = FALSE), 
-  nrow = 2)
 cowplot::plot_grid(
   plotMatrix(hic, use.scores = 'balanced', scale = 'log10', limits = c(-3.5, -1.2), caption = FALSE),
   plotMatrix(hic, use.scores = 'ICE', scale = 'log10', limits = c(-3.5, -1.2), caption = FALSE),
   plotMatrix(hic, use.scores = 'detrended', scale = 'linear', limits = c(-1, 1), cmap = bwrColors(), caption = FALSE), 
   nrow = 1)
-#----detrended linear plots may be best resolution for topological features
-plotMatrix(hic, use.scores = 'detrended', scale = 'linear', limits = c(-1, 1), cmap = bwrColors(), caption = FALSE)
-
-plotMatrix(hic,
-           loop=loops,
-           limits=c(-4,-1.2),
-           caption=TRUE)
 plotMatrix(hic,
            use.scores = 'detrended',
            scale = 'linear',
@@ -119,10 +146,10 @@ plotMatrix(hic,
            loops=loops,
            borders=borders)
 #hic<-autocorrelate(hic)
-break 
-
 plotSaddle(hic)
-hic
+break 
+#-------------------------------------------------------------------------
+#-----------------------------------------------------------------
 topologicalFeatures(hic,'compartments')
 metadata(hic)$eigens
 coverage(metadata(hic)$eigens, weight = 'eigen') |> export('hic_eigen.bw')
@@ -162,3 +189,4 @@ p2 <- ggplot(eigen_df, aes(x = pos, y = eigen)) +
 p2
 wrap_plots(p1, p2, ncol = 1, heights = c(10, 1))
 break 
+
