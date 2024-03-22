@@ -12,6 +12,9 @@ library(ggplot2)
 library(patchwork)
 library(GenomicRanges)
 library(rtracklayer)
+library(org.Mm.eg.db)
+library(EnsDb.Mmusculus.v79)
+library(ChIPpeakAnno)
 setwd('/home/em_b/Desktop/hicool/GSM7461656/SRR24843484')
 cf<-CoolFile('/home/em_b/Desktop/hicool/GSM7461656/SRR24843484/HiCool_output/matrices/threefiles^mapped-mm10^QNB15W.mcool')
 pairs_file<- PairsFile('/home/em_b/Desktop/hicool/GSM7461656/SRR24843484/HiCool_output/pairs/threefiles^mapped-mm10^QNB15W.pairs')
@@ -53,12 +56,29 @@ plotMatrix(hic,
            #cmap = bwrColors(),
            caption = TRUE,
            loops=loops,
-           borders=borders)
+           borders=borders,
+           symmetrical=TRUE,
+           rasterize=TRUE)
+detrend(hic)
 loopsdf<-data.frame(topologicalFeatures(hic,'loops'))
-loopsdf<-loops[order(loops$qvalue, decreasing=FALSE),]
-break
-#---annotate A/B compartments
-
+loopsdf<-loopsdf[order(loopsdf$qvalue, decreasing=FALSE),]
+#topologicalFeatures(hic,'loops')
+#seqlevelsStyle(loops)
+annoData<-toGRanges(EnsDb.Mmusculus.v79)
+annoData
+seqlevelsStyle(loops) <- seqlevelsStyle(annoData)
+#colnames(loopsdf)
+colnames(loopsdf)[1:3]<-c('seqnames','start','end')
+Loops <- toGRanges(loopsdf)
+anno<-annotatePeakInBatch(Loops,AnnotationData = annoData)
+anno <- addGeneIDs(anno, orgAnn="org.Mm.eg.db", 
+                   feature_id_type="ensembl_gene_id",
+                   IDs2Add=c("symbol"))
+anno
+enrichme<-data.frame(anno$symbol)
+enrichme<-na.omit(enrichme)
+enrichme
+#write.csv(enrichme,file = 'test.csv')
 break 
 cowplot::plot_grid(
   plotMatrix(hic, use.scores = 'count', caption = FALSE),
