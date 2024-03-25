@@ -3,9 +3,9 @@ library(HiCool)
 library(HiContacts)
 library(HiCcompare)
 library(HiCDOC)
-setwd('/home/em_b/Desktop/hicool/SRR22161720')
-r1<-file.path('SRR22161720_1.part_001.fastq.gz')
-r2<-file.path('SRR22161720_2.part_001.fastq.gz')
+setwd('/home/em_b/Desktop/hicool/SRR22161720_muCD8_MboI')
+r1<-file.path('SRR22161720_muCD8_MboI_filtered_R1.fastq.gz')
+r2<-file.path('SRR22161720_muCD8_MboI_filtered_R2.fastq.gz')
 hcf <- HiCool(
   r1 = r1, 
   r2 = r2, 
@@ -14,6 +14,8 @@ hcf <- HiCool(
   genome = 'mm10', 
   output = './HiCool/',
   keep_bam = TRUE,
-  build_report = TRUE)
+  build_report = TRUE,
+  threads = 24)
+
 #-----------------------------------
 #-----Arima are DpnII,HinfI.
