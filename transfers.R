@@ -18,8 +18,8 @@ library(EnsDb.Mmusculus.v79)
 library(ChIPpeakAnno)
 library(tibble)
 setwd('/Users/burudpc/Desktop/hi-C_crap')
-cf<-CoolFile('SRR22161720_muCD8_MboI_filtered^mapped-mm10^ZOXFW7.mcool')
-pairs_file<- PairsFile('SRR22161720_muCD8_MboI_filtered^mapped-mm10^ZOXFW7.pairs')
+cf<-CoolFile('threefiles^mapped-mm10^QNB15W.mcool')
+pairs_file<- PairsFile('threefiles^mapped-mm10^QNB15W.pairs')
 availableResolutions(cf)
 hic<-import(cf,
             resolution=1000,
@@ -86,7 +86,14 @@ anno <- addGeneIDs(anno, orgAnn="org.Mm.eg.db",
 anno
 anno$symbol
 loop_comparison<-add_column(Loops1, frag2_genes=anno$symbol, .after = 'seqnames2')
+test<-na.omit(loop_comparison)
+test<-test[,-c(1,3:9,11:17)]
+rownames(test)<-make.names(with(test,paste(frag1_genes,frag2_genes)),unique = TRUE)
+plot(test$pvalue,test$pvalue,xlab='p_value',ylab='p_value',col='red',cex=2,main='Hi-C Interactions')
+text(test$pvalue,test$qvalue,labels=rownames(test),adj=c(2),cex=0.6)
 break 
+write.csv(loop_comparison,file='muESC_loop_comparison.csv')
+
 cowplot::plot_grid(
   plotMatrix(hic, use.scores = 'count', caption = FALSE),
   plotMatrix(hic, use.scores = 'balanced', caption = FALSE),
