@@ -22,7 +22,7 @@ head(geneid)
 dim(geneid)
 listFilters(ensembl)
 listAttributes(ensembl)
-genes <-getBM(attributes = c('ensembl_transcript_id','external_gene_name','chromosome_name','p_value','start_position','end_position','description'),
+genes <-getBM(attributes = c('ensembl_transcript_id','external_gene_name','entrezgene_id','chromosome_name','p_value','start_position','end_position','description'),
               filters = 'ensembl_transcript_id',
               values = geneid,
               mart = ensembl)
