@@ -1,0 +1,43 @@
+library(HiCool)
+library(HiContacts)
+library(GenomicRanges)
+library(HiCExperiment)
+library(BiocParallel)
+library(HiCcompare)
+library(patchwork)
+library(GenomicRanges)
+library(Matrix)
+library(MASS)
+resolution<-8000
+setwd('/home/em_b/Desktop/hicool/GSE248029_il4_macro_DpnII_HinfI/mm10_output')
+#-------------------------------------------------------------------------------
+mcool_path<-file.path('/home/em_b/Desktop/hicool/GSE248029_il4_macro_DpnII_HinfI/mm10_output/matrices/SRR26855487_BALBc.mcool')
+pairs_path<-file.path('/home/em_b/Desktop/hicool/GSE248029_il4_macro_DpnII_HinfI/mm10_output/pairs/SRR26855487_BALBc.pairs')
+log_path<-file.path('/home/em_b/Desktop/hicool/GSE248029_il4_macro_DpnII_HinfI/mm10_output/logs/SRR26855487_BALBc.log')
+cf<-CoolFile(mcool_path,
+                   pairs_path,
+                   metadata = list(log=log_path),
+                   resolution=resolution)
+cf
+hic<-import(cf,
+            focus=c('chr7:103564001-104036000'))
+hic
+gc()
+#-------------------------------------------------------------------------------
+df<-data.frame(interactions(hic))
+summary(df$seqnames1)
+rm(cf,hic)
+gc()
+gc()
+df<-df[,-c(1,3:10,12:20,22)]
+colnames(df)<-c('region1','region2','IF')
+df<-as.matrix(df)
+str(df)
+gc()
+break 
+write.matrix(df,file='balbc.chr7.103564001.104036000.tsv')
+#write.csv(df,file = 'interaction_counts.csv')
+matrix<-read.delim('balbc.chr7.103564001.104036000.tsv',sep='')
+matrix<-as.matrix(matrix)
+str(matrix)
+
