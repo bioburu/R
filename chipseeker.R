@@ -82,5 +82,69 @@ GO_result_df<-GO_result_df[order(GO_result_df$Count, decreasing=TRUE),]
 GO_result_plot <- pairwise_termsim(GO_result)
 emapplot(GO_result_plot, showCategory = 60)
 View(annotatedPeaksDF)
-View(GO_result_df)
+View(GO_result_df) 
+#----for heatmapping
+geo <- readPeakFile('/home/em_b/Downloads/GSM1295076_CBX6_BF_ChipSeq_mergedReps_peaks.bed')
+table(geo@seqnames)
+head(geo)
+promoter <- getPromoters(TxDb=TxDb.Hsapiens.UCSC.hg19.knownGene,
+                         upstream=3000,
+                         downstream=3000,
+                         by='gene')
+promoter
+tagMatrix <- getTagMatrix(geo, windows=promoter)
+tagHeatmap(tagMatrix)
+gc()
+#-------------------------------------------------------------------------------
+data("tagMatrixList")
+tagMatrixList
+x<-tagMatrixList[[4]]
+tagHeatmap(x)
+#-------------------------------------------------------------------------------
+peak<-readPeakFile('SRR23082704_K27Ac_mm39_peaks.xls')
+peak
+peak<-read.table('/home/em_b/work_stuff/FCCC/chipseq/SRR23082704_K27Ac_mm39_summits.bed')
+colnames(peak)<-c('seqnames','start','end','V4','V5')
+peak<-GRanges(peak)
+peak<-tidyChromosomes(peak,
+                      keep.X=FALSE,
+                      keep.Y=FALSE,
+                      keep.M = FALSE,
+                      keep.nonstandard = FALSE)
+table(peak@seqnames)
+peak
+geo
+#--------------------------------------------------------------------------
+macsPeaks <- '/home/em_b/work_stuff/FCCC/chipseq/SRR23082704_K27Ac_mm39_peaks.xls'
+df <- read.delim(macsPeaks,comment.char="#")
+summary(df$X.log10.qvalue.)
+df<-subset(df,X.log10.qvalue.>84)
+df<-GRanges(df)
+df<-tidyChromosomes(df,
+                      keep.X=FALSE,
+                      keep.Y=FALSE,
+                      keep.M = FALSE,
+                      keep.nonstandard = FALSE)
+table(df@seqnames)
+#promoter <- getPromoters(TxDb=TxDb.Mmusculus.UCSC.mm39.knownGene,
+#                         upstream=3000,
+#                         downstream=3000,
+#                         by='gene')
+#promoter
+#tagMatrix <- getTagMatrix(df, windows=promoter)
+#View(tagMatrix)
+#tagHeatmap(tagMatrix)
+peakHeatmap(df,
+            TxDb = TxDb.Mmusculus.UCSC.mm39.knownGene,
+            nbin = 800,
+            upstream=3000,
+            downstream=3000)
+#---this one
+peakHeatmap(peak = df,
+            TxDb = txdb,
+            upstream = rel(0.2),
+            downstream = rel(0.2),
+            by = "gene",
+            type = "body",
+            nbin = 800)
 break 
