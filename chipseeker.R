@@ -95,9 +95,11 @@ annotatedPeaksGR <- as.GRanges(peakAnno)
 annotatedPeaksDF <- as.data.frame(peakAnno)
 annotatedPeaksDF[1:2, ]
 annotatedPeaksGR[1:2,]
+annotatedPeaksGR
 annotatedPeaksGR_TSS <- annotatedPeaksGR[annotatedPeaksGR$annotation == "Promoter",
 ]
 genesWithPeakInTSS <- unique(annotatedPeaksGR_TSS$geneId)
+genesWithPeakInTSS
 genesWithPeakInTSS[1:2]
 allGeneGR <- genes(TxDb.Mmusculus.UCSC.mm39.refGene)
 allGeneGR[1:2, ]
@@ -111,7 +113,13 @@ GO_result_df[1:2, ]
 GO_result_df<-GO_result_df[order(GO_result_df$Count, decreasing=TRUE),]
 GO_result_plot <- pairwise_termsim(GO_result)
 emapplot(GO_result_plot, showCategory = 10)
+cat('all regions annotated genes')
 View(annotatedPeaksDF)
+cat('only promoter annotated genes')
+View(data.frame(annotatedPeaksGR_TSS))
+cat('GO results')
 View(GO_result_df)
 break 
+write.csv(annotatedPeaksGR_TSS,file='promoter_thra_bindings.csv')
+
 
