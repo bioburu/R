@@ -9,8 +9,10 @@ library(ReactomePA)
 library(plyranges)
 library(BRGenomics)
 library(ggplot2)
+library(UpSetR)
+library(ChIPpeakAnno)
 txdb<-TxDb.Mmusculus.UCSC.mm39.refGene
-peak <- readPeakFile('/home/em_b/Desktop/FCCC/chipseq/SRR23082704_K27Ac_mm39_summits.bed')
+peak <- readPeakFile('/home/em_b/work_stuff/FCCC/chipseq/comb/H3/T3_tra_peaks.narrowPeak')
 table(seqnames(peak))
 peak
 peak<-tidyChromosomes(peak,
@@ -22,7 +24,7 @@ peak<-tidyChromosomes(peak,
 table(seqnames(peak))
 covplot(peak, weightCol="V5")
 summary(peak$V5)
-covplot(peak, weightCol="V5", chrs=c("chr1", "chr19"))
+#covplot(peak, weightCol="V5", chrs=c("chr1", "chr19"))
 gc()
 plotAvgProf2(peak, TxDb=txdb, upstream=3000, downstream=3000,
              xlab="Genomic Region (5'->3')", ylab = "Read Count Frequency",
@@ -31,7 +33,30 @@ plotPeakProf2(peak = peak, upstream = 3000, downstream = 3000,
               conf = 0.95, by = "gene", type = "body", nbin = 800,
               TxDb = txdb, weightCol = "V5",ignore_strand = F)
 gc()
-macsPeaks <- '/home/em_b/Desktop/FCCC/chipseq/SRR23082704_K27Ac_mm39_peaks.xls'
+macsPeaks <- '/home/em_b/work_stuff/FCCC/chipseq/comb/H3/T3_tra_peaks.xls'
+htmapdf <- read.delim(macsPeaks,comment.char="#")
+summary(htmapdf$X.log10.qvalue.)
+#df<-subset(df,X.log10.qvalue.>84)
+htmapdf<-GRanges(htmapdf)
+htmapdf<-tidyChromosomes(htmapdf,
+                    keep.X=FALSE,
+                    keep.Y=FALSE,
+                    keep.M = FALSE,
+                    keep.nonstandard = FALSE)
+table(htmapdf@seqnames)
+#peakHeatmap(htmapdf,
+#            TxDb = TxDb.Mmusculus.UCSC.mm39.knownGene,
+#            nbin = 800,
+#            upstream=3000,
+#            downstream=3000)
+peakHeatmap(peak = htmapdf,
+            TxDb = txdb,
+            upstream = rel(0.2),
+            downstream = rel(0.2),
+            by = "gene",
+            type = "body",
+            nbin = 400)+
+  scale_fill_distiller(palette = 'Greys')
 df <- read.delim(macsPeaks,comment.char="#")
 table(df$chr)
 list<-c('chr1','chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10',
@@ -49,7 +74,11 @@ peakAnno
 plotAnnoPie(peakAnno)
 #plotAnnoBar(peakAnno)
 vennpie(peakAnno)
-upsetplot(peakAnno)
+res <- genomicElementUpSetR(peak,
+                            TxDb.Mmusculus.UCSC.mm39.knownGene)
+upset(res[["plotData"]], 
+      nsets = length(colnames(res$plotData)), 
+      nintersects = NA)
 plotDistToTSS(peakAnno,
               title="Distribution of transcription factor-binding loci\nrelative to TSS")
 #------Reactome pathway 
@@ -57,6 +86,7 @@ gene <- seq2gene(peak, tssRegion = c(-1000, 1000), flankDistance = 3000, TxDb=tx
 gene
 pathway <- enrichPathway(gene,
                           organism = 'mouse')
+pathway
 dotplot(pathway)
 pathway<-data.frame(pathway)
 #write.csv(pathway,file='reactome_pathway.csv')
@@ -80,71 +110,8 @@ GO_result_df <- data.frame(GO_result)
 GO_result_df[1:2, ]
 GO_result_df<-GO_result_df[order(GO_result_df$Count, decreasing=TRUE),]
 GO_result_plot <- pairwise_termsim(GO_result)
-emapplot(GO_result_plot, showCategory = 60)
+emapplot(GO_result_plot, showCategory = 10)
 View(annotatedPeaksDF)
-View(GO_result_df) 
-#----for heatmapping
-geo <- readPeakFile('/home/em_b/Downloads/GSM1295076_CBX6_BF_ChipSeq_mergedReps_peaks.bed')
-table(geo@seqnames)
-head(geo)
-promoter <- getPromoters(TxDb=TxDb.Hsapiens.UCSC.hg19.knownGene,
-                         upstream=3000,
-                         downstream=3000,
-                         by='gene')
-promoter
-tagMatrix <- getTagMatrix(geo, windows=promoter)
-tagHeatmap(tagMatrix)
-gc()
-#-------------------------------------------------------------------------------
-data("tagMatrixList")
-tagMatrixList
-x<-tagMatrixList[[4]]
-tagHeatmap(x)
-#-------------------------------------------------------------------------------
-peak<-readPeakFile('SRR23082704_K27Ac_mm39_peaks.xls')
-peak
-peak<-read.table('/home/em_b/work_stuff/FCCC/chipseq/SRR23082704_K27Ac_mm39_summits.bed')
-colnames(peak)<-c('seqnames','start','end','V4','V5')
-peak<-GRanges(peak)
-peak<-tidyChromosomes(peak,
-                      keep.X=FALSE,
-                      keep.Y=FALSE,
-                      keep.M = FALSE,
-                      keep.nonstandard = FALSE)
-table(peak@seqnames)
-peak
-geo
-#--------------------------------------------------------------------------
-macsPeaks <- '/home/em_b/work_stuff/FCCC/chipseq/SRR23082704_K27Ac_mm39_peaks.xls'
-df <- read.delim(macsPeaks,comment.char="#")
-summary(df$X.log10.qvalue.)
-df<-subset(df,X.log10.qvalue.>84)
-df<-GRanges(df)
-df<-tidyChromosomes(df,
-                      keep.X=FALSE,
-                      keep.Y=FALSE,
-                      keep.M = FALSE,
-                      keep.nonstandard = FALSE)
-table(df@seqnames)
-#promoter <- getPromoters(TxDb=TxDb.Mmusculus.UCSC.mm39.knownGene,
-#                         upstream=3000,
-#                         downstream=3000,
-#                         by='gene')
-#promoter
-#tagMatrix <- getTagMatrix(df, windows=promoter)
-#View(tagMatrix)
-#tagHeatmap(tagMatrix)
-peakHeatmap(df,
-            TxDb = TxDb.Mmusculus.UCSC.mm39.knownGene,
-            nbin = 800,
-            upstream=3000,
-            downstream=3000)
-#---this one
-peakHeatmap(peak = df,
-            TxDb = txdb,
-            upstream = rel(0.2),
-            downstream = rel(0.2),
-            by = "gene",
-            type = "body",
-            nbin = 800)
+View(GO_result_df)
 break 
+
