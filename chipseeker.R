@@ -11,8 +11,10 @@ library(BRGenomics)
 library(ggplot2)
 library(UpSetR)
 library(ChIPpeakAnno)
+library(pathview)
+setwd('/home/em_b/work_stuff/FCCC/chipseq/comb/macs/E1')
 txdb<-TxDb.Mmusculus.UCSC.mm39.refGene
-peak <- readPeakFile('/home/em_b/work_stuff/FCCC/chipseq/comb/H3/T3_tra_peaks.narrowPeak')
+peak <- readPeakFile('E1_A1_peaks.narrowPeak')
 table(seqnames(peak))
 peak
 peak<-tidyChromosomes(peak,
@@ -33,7 +35,7 @@ plotPeakProf2(peak = peak, upstream = 3000, downstream = 3000,
               conf = 0.95, by = "gene", type = "body", nbin = 800,
               TxDb = txdb, weightCol = "V5",ignore_strand = F)
 gc()
-macsPeaks <- '/home/em_b/work_stuff/FCCC/chipseq/comb/H3/T3_tra_peaks.xls'
+macsPeaks <- 'E1_A1_peaks.xls'
 htmapdf <- read.delim(macsPeaks,comment.char="#")
 summary(htmapdf$X.log10.qvalue.)
 #df<-subset(df,X.log10.qvalue.>84)
@@ -55,7 +57,7 @@ peakHeatmap(peak = htmapdf,
             downstream = rel(0.2),
             by = "gene",
             type = "body",
-            nbin = 400)+
+            nbin = 800)+
   scale_fill_distiller(palette = 'Greys')
 df <- read.delim(macsPeaks,comment.char="#")
 table(df$chr)
@@ -82,28 +84,45 @@ upset(res[["plotData"]],
 plotDistToTSS(peakAnno,
               title="Distribution of transcription factor-binding loci\nrelative to TSS")
 #------Reactome pathway 
+cat('Reactome is for all peaks general output')
 gene <- seq2gene(peak, tssRegion = c(-1000, 1000), flankDistance = 3000, TxDb=txdb)
 gene
-pathway <- enrichPathway(gene,
+reactome <- enrichPathway(gene,
                           organism = 'mouse')
-pathway
-dotplot(pathway)
-pathway<-data.frame(pathway)
+dotplot(reactome)
+reactome<-data.frame(reactome)
 #write.csv(pathway,file='reactome_pathway.csv')
+#-------------------------------------------------------------------------------
+cat('KEGG is refined to only the selected regions (promoter,distal-intergenic)')
+kegg<-data.frame(peakAnno)
+kegg <- promoters[kegg$annotation == "Promoter",]
+kegg<-promoters$fold_enrichment
+names(kegg)<-promoters$geneId
+head(kegg)
+pathview(gene.data = kegg,
+               pathway.id = '04919',
+               species = 'mmu',
+               out.suffix='mmu_test')
+pathview(gene.data = kegg,
+               pathway.id = '04722',
+               species = 'mmu',
+               out.suffix='mmu_test')
+
+summary(promoters$fold_enrichment)
 #-------------------------------------------------------------------------------
 annotatedPeaksGR <- as.GRanges(peakAnno)
 annotatedPeaksDF <- as.data.frame(peakAnno)
-annotatedPeaksDF[1:2, ]
-annotatedPeaksGR[1:2,]
-annotatedPeaksGR
-annotatedPeaksGR_TSS <- annotatedPeaksGR[annotatedPeaksGR$annotation == "Promoter",
-]
+annotatedPeaksDF
+annotatedPeaksGR$annotation
+annotatedPeaksGR_TSS <- annotatedPeaksGR[annotatedPeaksGR$annotation == "Promoter",]
+annotatedPeaksGR_TSS
+#duplicated(annotatedPeaksGR_TSS$geneId)
 genesWithPeakInTSS <- unique(annotatedPeaksGR_TSS$geneId)
 genesWithPeakInTSS
-genesWithPeakInTSS[1:2]
 allGeneGR <- genes(TxDb.Mmusculus.UCSC.mm39.refGene)
 allGeneGR[1:2, ]
 #-----Gene ontology enrichment
+cat('GO is refined to only the selected regions (promoter,distal-intergenic)')
 GO_result <- enrichGO(gene = genesWithPeakInTSS,
                       #universe = allGeneIDs,
                       OrgDb = org.Mm.eg.db,
@@ -112,14 +131,8 @@ GO_result_df <- data.frame(GO_result)
 GO_result_df[1:2, ]
 GO_result_df<-GO_result_df[order(GO_result_df$Count, decreasing=TRUE),]
 GO_result_plot <- pairwise_termsim(GO_result)
-emapplot(GO_result_plot, showCategory = 10)
-cat('all regions annotated genes')
+emapplot(GO_result_plot, showCategory = 50)
 View(annotatedPeaksDF)
-cat('only promoter annotated genes')
-View(data.frame(annotatedPeaksGR_TSS))
-cat('GO results')
 View(GO_result_df)
 break 
-write.csv(annotatedPeaksGR_TSS,file='promoter_thra_bindings.csv')
-
-
+View(data.frame(peakAnno))
