@@ -14,14 +14,14 @@ setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE154958_GBM_dura_NSC')
 matrix<-read_excel('GSE154958_cell_culture_star_counts.xlsx')
 matrix<-data.frame(matrix)
 str(matrix)
-matrix<-matrix %>%
+matrix<-data.frame(matrix %>%
   group_by(Gene) %>%
   summarize(T3_1 = sum(T3_1),
             T3_2 = sum(T3_2),
             T3_3 = sum(T3_3),
             PBS_1 = sum(PBS_1),
             PBS_2 = sum(PBS_2),
-            PBS_3 = sum(PBS_3))
+            PBS_3 = sum(PBS_3)))
 str(matrix)
 row.names(matrix)<-make.names(matrix$Gene.Symbol,unique = TRUE)
 matrix<-matrix[,-c(1)]
