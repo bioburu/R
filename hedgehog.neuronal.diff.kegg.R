@@ -53,3 +53,18 @@ pheatmap(hh[c('PRKACA','PRKACB','ITGAV','ITGB3',
          border_color = 'grey',
          fontsize = 10,
          color = colorRampPalette(rev(brewer.pal(n=7,name='RdYlBu')))(100))
+#---MANUSCRIPT TH PATHWAY
+pheatmap(hh[c('TBCEL','GAS2L1','KIT','KLF9','HR','PPARGC1A',
+              'NRARP','DBP','SORL1',
+              'F2R','UPP2','AATK','PIM3',
+              'TTC39C','SLC46A3','IDH1','NTRK2',
+              'SEL1L3','EGFR','MMD','SBK1',
+              'ULK2','MGLL','CSAD',
+              'NRP1','SORT1',
+              'CHRNA4'),],
+         scale = 'row',
+         cluster_cols = FALSE,
+         cluster_rows = FALSE,
+         border_color = 'grey',
+         fontsize = 10,
+         color = colorRampPalette(rev(brewer.pal(n=7,name='RdYlBu')))(100))
