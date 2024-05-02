@@ -4,28 +4,16 @@ library(dplyr)
 library(ggplot2)
 library(ggridges)
 library(caTools)
-library(car)
-library(caret)
-library(InformationValue)
-library(pROC)
-library(ROCR)
+#library(caret)
+#library(InformationValue)
+#library(pROC)
+#library(ROCR)
 library(readxl)
-setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/GSE154958_GBM_dura_NSC')
-matrix<-read_excel('GSE154958_cell_culture_star_counts.xlsx')
-matrix<-data.frame(matrix)
-str(matrix)
-matrix<-data.frame(matrix %>%
-  group_by(Gene) %>%
-  summarize(T3_1 = sum(T3_1),
-            T3_2 = sum(T3_2),
-            T3_3 = sum(T3_3),
-            PBS_1 = sum(PBS_1),
-            PBS_2 = sum(PBS_2),
-            PBS_3 = sum(PBS_3)))
-str(matrix)
-row.names(matrix)<-make.names(matrix$Gene.Symbol,unique = TRUE)
+setwd('/home/em_b/work_stuff/FCCC/T3_RNAseq/')
+matrix<-read.csv('biomart.hg38.csv')
+row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
 matrix<-matrix[,-c(1)]
-data <- CreateSeuratObject(counts=matrix,project = 'gbm')
+data <- CreateSeuratObject(counts=matrix,project = 'hg38')
 gc()
 data@active.ident
 table(data@active.ident)
@@ -45,11 +33,42 @@ gc()
 data <- ScaleData(data, features = all.genes)
 gc()
 dim(data)
-data <- RunPCA(data, features = VariableFeatures(object = data))
-DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
+data <- RunPCA(data,npcs = 11, features = VariableFeatures(object = data))
+DimHeatmap(data, dims = 1:11, cells = 500, balanced = T)
 ElbowPlot(data)
 gc()
 table(data@meta.data$orig.ident)
+#-----correlations
+FeatureScatter(data,
+               feature1 = "NEUROD1",
+               feature2 = 'EZH2',
+               cols = c(),
+               pt.size = 5,
+               shuffle = TRUE,
+               seed = 1,
+               jitter = TRUE)
+VlnPlot(data,
+            features = c('NEUROD1','EZH2'),
+        pt.size = 1,
+        cols = c('grey','red',
+                 'grey','red'),
+        layer='counts')
+
+DimPlot(data,
+        cols = c('grey','red',
+                 'grey','red'),
+        pt.size = 7,
+        dims = c(3,6))
+#-----------PCA features
+TopFeatures(data[['pca']],
+            dim = 3,
+            balanced = TRUE)
+#------ridgeplot
+RidgePlot(data,
+          features = c("HR","KLF9"),
+          cols = c('grey','red','grey','red'))
+#------------------------------------------------
+break
 #------------------------------------------
 x<-FindMarkers(data, ident.1 = 'GBM', ident.2 = 'NSC', 
                features = c(top1000),logfc.threshold=2,
