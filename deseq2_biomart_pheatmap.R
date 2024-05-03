@@ -9,6 +9,16 @@ library(RColorBrewer)
 setwd('/home/em_b/work_stuff/FCCC/T3_RNAseq/bulk_RNAseq_raw_files')
 matrix<-read.csv('biomart.mm39.csv')
 str(matrix)
+#---if subsetting genes
+list<-c('Neurod1','Cntn2','Map1a','Rbfox3',
+        'Nefl','Fyn','Reln','Unc13a',
+        'Ppp2r5b','Trim67','Cnr1','Kidins220',
+        'Dpysl3','Rims1','Atp8a2','Mapt',
+        'L1cam','Apbb1','Ss18l1',
+        'Rufy3','Ndrg4','Pacsin1','Fkbp1b',
+        'Neurod2','Sez6',
+        'Map1b')
+matrix<-subset(matrix, subset = Gene %in% list)
 row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
 matrix<-matrix[,-1]
 head(matrix)
