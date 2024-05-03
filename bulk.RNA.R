@@ -10,9 +10,10 @@ library(caTools)
 #library(ROCR)
 library(readxl)
 setwd('/home/em_b/work_stuff/FCCC/T3_RNAseq/')
-matrix<-read.csv('biomart.hg38.csv')
+matrix<-read.csv('biomart.mm39.csv')
 row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
 matrix<-matrix[,-c(1)]
+matrix<-round(matrix)
 data <- CreateSeuratObject(counts=matrix,project = 'hg38')
 gc()
 data@active.ident
@@ -69,6 +70,19 @@ RidgePlot(data,
           cols = c('grey','red','grey','red'))
 #------------------------------------------------
 break
+FindMarkers(data,
+            ident.1 = 'SHH.T3',
+            ident.2 = 'SHH.PBS', 
+            features = c('NEUROD1','CNTN2','MAP1A','RBFOX3',
+                         'FYN','RELN',
+                         'PPP2R5B','TRIM67','CNR1','KIDINS220',
+                         'DPYSL3','RIMS1','ATP8A2','MAPT',
+                         'APBB1','SS18L1','RUFY3',
+                         'NDRG4','FKBP1B','NEUROD2','MAP1B'),
+            logfc.threshold=0,
+            only.pos = FALSE,
+            test.use = 'negbinom',
+            min.pct = 0.1)
 #------------------------------------------
 x<-FindMarkers(data, ident.1 = 'GBM', ident.2 = 'NSC', 
                features = c(top1000),logfc.threshold=2,
