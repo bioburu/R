@@ -15,3 +15,8 @@ gene <- seq2gene(reactome,
                  tssRegion = c(-1000, 1000),
                  flankDistance = 3000,
                  TxDb=txdb)
+############################################3
+or
+peakAnno <- annotatePeak(macsPeaks_GR, tssRegion=c(-1000, 1000), 
+                         TxDb=txdb, 
+                         annoDb="org.Mm.eg.db")
