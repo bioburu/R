@@ -7,23 +7,29 @@ library(ChIPseeker)
 library(BRGenomics)
 #----GenomeAxisTrack----------------------------------------------------------
 gen<-'mm39'
-chr<-9
-cat('Add genomic axis to top of plot')
-gtrack <- GenomeAxisTrack()
-#------show chromosome ideogram
-itrack <- IdeogramTrack(genome = gen, chromosome = chr)
+chr<-'chr9'
 bm <- useEnsembl(biomart = "ENSEMBL_MART_ENSEMBL", 
                  dataset = "mmusculus_gene_ensembl")
 biomTrack <- BiomartGeneRegionTrack(genome = "mm39",
-                                    #chromosome = chr, 
+                                    #chromosome = 9, 
                                     #start = 79282981,
                                     #end = 79286980,
                                     name = "ENSEMBL",
                                     biomart = bm,
                                     symbol = 'Gnb5')
+plotTracks(biomTrack,
+           transcriptAnnotation='symbol')
+gtrack <- GenomeAxisTrack()
+plotTracks(list(gtrack,biomTrack),
+           transcriptAnnotation='symbol')
+#------show chromosome ideogram
+itrack <- IdeogramTrack(genome = gen,chromosome=chr)
+plotTracks(list(gtrack,itrack,biomTrack),
+           transcriptAnnotation='symbol')
 cat('add bases to genomic tracks') 
 strack <- SequenceTrack(Mmusculus, chromosome = chr)
-strack
+plotTracks(list(gtrack,itrack,strack,biomTrack),
+           transcriptAnnotation='symbol')
 #-----DataTrack constructor is important
 set.seed(255)
 lim <- c(75213570, 75345923)
@@ -60,7 +66,7 @@ test<-DataTrack(data = Test$FC, start = Test$start,
                 end = Test$end, chromosome = chr, genome = gen, 
                 name = "Test")
 cat('options for types are: histogram,horizon,heatmap,polygon,mountain,b and you can layer')
-plotTracks(list(itrack, gtrack,biomTrack,strack,dtrack,test),
+plotTracks(list(gtrack,itrack,strack,biomTrack,dtrack,test),
            chromosome = chr,
            transcriptAnnotation='symbol',
            extend.left = 0.5,
