@@ -1,6 +1,42 @@
+library(Gviz)
 library(GenomicRanges)
-library(TxDb.Mmusculus.UCSC.mm39.refGene)
 library(TxDb.Mmusculus.UCSC.mm39.knownGene)
+library(biomaRt)
+library(BSgenome.Mmusculus.UCSC.mm39)
+library(ChIPseeker)
+library(BRGenomics)
+txdb<-TxDb.Mmusculus.UCSC.mm39.knownGene
+#---------------------
+peak <- readPeakFile('/home/em_b/work_stuff/chipseq/thra_0hr_comb/peaks/thra_0hr_IgG_peaks.narrowPeak')
+table(seqnames(peak))
+peak
+peak<-tidyChromosomes(peak,
+                      keep.X=FALSE,
+                      keep.Y=FALSE,
+                      keep.M = FALSE,
+                      keep.nonstandard = FALSE,
+                      genome = 'mm39')
+table(seqnames(peak))
+peak<-data.frame(peak)
+GR <- GRanges(seqnames=peak$seqnames,
+              IRanges(peak$start,
+                      peak$end))
+GR
+peakAnno <- annotatePeak(GR, tssRegion=c(-1000, 1000), 
+                         TxDb=txdb, 
+                         annoDb="org.Mm.eg.db")
+df<-(data.frame(peakAnno))
+df<-cbind(df,peak)
+
+df<-df[order(df$V5, decreasing=TRUE),]
+summary(df$V5)
+df<-subset(df,V5> 200)
+summary(df$V5)
+library(Rsubread)
+library(biomaRt)
+library(dplyr)
+library(DESeq2)
+library(GenomicRanges)
 library(ChIPseeker)
 library(clusterProfiler)
 library(org.Mm.eg.db)
@@ -12,154 +48,255 @@ library(ggplot2)
 library(UpSetR)
 library(ChIPpeakAnno)
 library(pathview)
-setwd('/home/em_b/work_stuff/chipseq2/thra_0hr_comb/peaks_p0.01')
-txdb<-TxDb.Mmusculus.UCSC.mm39.refGene
-peak <- readPeakFile('thra_0hr_comb_peaks.narrowPeak')
-table(seqnames(peak))
-peak
-peak<-tidyChromosomes(peak,
-                      keep.X=FALSE,
-                      keep.Y=FALSE,
-                      keep.M = FALSE,
-                      keep.nonstandard = FALSE,
-                      genome = 'mm39')
-table(seqnames(peak))
-covplot(peak, weightCol="V5")
-summary(peak$V5)
-#covplot(peak, weightCol="V5", chrs=c("chr1", "chr19"))
-gc()
-plotAvgProf2(peak, TxDb=txdb, upstream=3000, downstream=3000,
-             xlab="Genomic Region (5'->3')", ylab = "Read Count Frequency",
-             conf = 0.95)
-plotPeakProf2(peak = peak, upstream = 3000, downstream = 3000,
-              conf = 0.95, by = "gene", type = "body", nbin = 800,
-              TxDb = txdb, weightCol = "V5",ignore_strand = F)
-gc()
-macsPeaks <- 'thra_0hr_comb_peaks.xls'
-#htmapdf <- read.delim(macsPeaks,comment.char="#")
-#summary(htmapdf$X.log10.qvalue.)
-#df<-subset(df,X.log10.qvalue.>84)
-#htmapdf<-GRanges(htmapdf)
-#htmapdf<-tidyChromosomes(htmapdf,
-#                         keep.X=FALSE,
-#                         keep.Y=FALSE,
-#                         keep.M = FALSE,
-#                         keep.nonstandard = FALSE)
-#table(htmapdf@seqnames)
-#peakHeatmap(htmapdf,
-#            TxDb = TxDb.Mmusculus.UCSC.mm39.knownGene,
-#            nbin = 800,
-#            upstream=3000,
-#            downstream=3000)
-#peakHeatmap(peak = htmapdf,
-#            TxDb = txdb,
-#            upstream = rel(0.2),
-#            downstream = rel(0.2),
-#            by = "gene",
-#            type = "body",
-#            nbin = 800)+
-#  scale_fill_distiller(palette = 'Greys')
-#--------------enter in peaks.xls
-peaks.xls <- 'thra_0hr_comb_peaks.xls'
-#------------read in peaks file
-peaks.xls <- read.delim(peaks.xls,comment.char="#")
-table(peaks.xls$chr)
-#----------remove chromosomes not needed
-list<-c('chr1','chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10',
-        'chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19')
-peaks.xls<-subset(peaks.xls, subset = chr %in% list)
-table(peaks.xls$chr)
-reactome<-GRanges(peaks.xls)
-cat('Reactome is for all peaks general output')
-gene <- seq2gene(reactome,
-                 tssRegion = c(-1000, 1000),
-                 flankDistance = 3000,
-                 TxDb=txdb)
-length(gene)
-head(gene)
-str(gene)
-reactome <- enrichPathway(gene,
-                          organism = 'mouse')
-reactome
-dotplot(reactome,
+library(simplifyEnrichment)
+library(TxDb.Mmusculus.UCSC.mm39.knownGene)
+txdb<-TxDb.Mmusculus.UCSC.mm39.knownGene
+counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386662/SRR23386662.rmdup.sort.chr.bam',
+                      annot.inbuilt = 'mm39',
+                      isPairedEnd = TRUE)
+T3_1<-data.frame(counts$counts)
+T3_1<-cbind(row.names(T3_1),T3_1)
+colnames(T3_1)<-c('Gene','MB.T3_1')
+head(T3_1)
+#-------------------------------------------------------------------------------
+counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386663/SRR23386663.rmdup.sort.chr.bam',
+                      annot.inbuilt = 'mm39',
+                      isPairedEnd = TRUE)
+T3_2<-data.frame(counts$counts)
+T3_2<-cbind(row.names(T3_2),T3_2)
+colnames(T3_2)<-c('Gene','MB.T3_2')
+head(T3_2)
+#-------------------------------------------------------------------------------
+counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386664/SRR23386664.rmdup.sort.chr.bam',
+                      annot.inbuilt = 'mm39',
+                      isPairedEnd = TRUE)
+T3_3<-data.frame(counts$counts)
+T3_3<-cbind(row.names(T3_3),T3_3)
+colnames(T3_3)<-c('Gene','MB.T3_3')
+head(T3_3)
+#-=-----------------------------------------------------------------------------
+counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386665/SRR23386665.rmdup.sort.chr.bam',
+                      annot.inbuilt = 'mm39',
+                      isPairedEnd = TRUE)
+PBS_1<-data.frame(counts$counts)
+PBS_1<-cbind(row.names(PBS_1),PBS_1)
+colnames(PBS_1)<-c('Gene','MB.PBS_1')
+head(PBS_1)
+#-------------------------------------------------------------------------------
+counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386666/SRR23386666.rmdup.sort.chr.bam',
+                      annot.inbuilt = 'mm39',
+                      isPairedEnd = TRUE)
+PBS_2<-data.frame(counts$counts)
+PBS_2<-cbind(row.names(PBS_2),PBS_2)
+colnames(PBS_2)<-c('Gene','MB.PBS_2')
+head(PBS_2)
+#-------------------------------------------------------------------------------
+counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386667/SRR23386667.rmdup.sort.chr.bam',
+                      annot.inbuilt = 'mm39',
+                      isPairedEnd = TRUE)
+PBS_3<-data.frame(counts$counts)
+PBS_3<-cbind(row.names(PBS_3),PBS_3)
+colnames(PBS_3)<-c('Gene','MB.PBS_3')
+head(PBS_3)
+#-------------------------------------------------------------------------------
+matrix<-cbind(PBS_1,
+              PBS_2$MB.PBS_2,
+              PBS_3$MB.PBS_3,
+              T3_1$MB.T3_1,
+              T3_2$MB.T3_2,
+              T3_3$MB.T3_3)
+colnames(matrix)<-c('Gene','PBS_1','PBS_2','PBS_3','T3_1','T3_2','T3_3')
+#--------------------biomart
+Sys.setenv("http_proxy"="http://my.proxy.org:9999")
+listMarts()
+ensembl=useMart('ENSEMBL_MART_ENSEMBL')
+#listDatasets(ensembl)
+ensembl=useDataset("mmusculus_gene_ensembl",
+                   mart = ensembl)
+geneid <- matrix$Gene
+head(geneid)
+#listFilters(ensembl)
+#listAttributes(ensembl)
+genes <-getBM(attributes = c('external_gene_name','entrezgene_id'),
+              filters = 'entrezgene_id',
+              values = geneid,
+              mart = ensembl)
+head(genes)
+colnames(genes)[2]<-'Gene'
+colnames(genes)
+output <- merge(genes, matrix, by='Gene')
+#---------------------------------------------------------
+output<-data.frame(output %>%
+                     group_by(external_gene_name) %>%
+                     summarize(T3_1 = sum(T3_1),
+                               T3_2 = sum(T3_2),
+                               T3_3 = sum(T3_3),
+                               PBS_1 = sum(PBS_1),
+                               PBS_2 = sum(PBS_2),
+                               PBS_3 = sum(PBS_3)))
+row.names(output)<-output$external_gene_name
+output<-output[-1,-1]
+#write.csv(output,file='T3_rnaseq_df.csv')
+#-------------------------------------------------------------------------------
+names<-colnames(output)
+names
+condition<-c('B','B','B','A','A','A')
+type<-c('paired','paired','paired','paired','paired','paired')
+coldata<-data.frame(cbind(names,condition,type))
+row.names(coldata)<-make.names(coldata$names,
+                               unique=TRUE)
+coldata<-coldata[,-1]
+coldata
+#-----------------------------------------------------------------------------
+colnames(output)
+deseq<-DESeqDataSetFromMatrix(countData = output,colData = coldata,design = ~ condition)
+deseq
+DE<-DESeq(deseq)
+plotMA(DE,ylim=c(-5,5))
+plotDispEsts(DE)
+#-------------------------------------------------------------------------------
+results<-results(DE)
+results
+x<-data.frame(results)
+x<-x[order(x$pvalue, decreasing=FALSE),]
+x<-subset(x,padj< 0.05)
+summary(x)
+upreg<-subset(x,log2FoldChange> 1.5)
+downreg<-subset(x,log2FoldChange< -1.5)
+#setwd('/home/em_b/Downloads')
+#write.csv(upreg,file='upreg_rna.csv')
+#write.csv(downreg,file='downreg_rna.csv')
+list<-df$SYMBOL
+rna_chip_up<-subset(upreg, subset = row.names(upreg) %in% list)
+cat(row.names(rna_chip_up))
+list2<-row.names(rna_chip_up)
+rna_chip_up<-subset(df, subset = SYMBOL %in% list2)
+upreg_reactome <- enrichPathway(rna_chip_up$geneId,
+                                organism = 'mouse')
+upreg_reactome
+dotplot(upreg_reactome,
         x='Count',
         color= 'qvalue',
         size= NULL,
         split=NULL,
         font.size=15,
-        title='q-values derived from modeling analysis of chip-seq 3
-peak calls',
         label_format=50)
-Reactome<-data.frame(reactome)
-str(gene)
-edox <- setReadable(reactome, 'org.Mm.eg.db', 'ENTREZID')
+View(data.frame(upreg_reactome))
+edox <- setReadable(upreg_reactome, 'org.Mm.eg.db', 'ENTREZID')
 cnetplot(edox,
-         foldChange=gene,
+         #foldChange=gene)#,
          node_label='all',
          colorEdge=TRUE)
 cnetplot(edox,
-         foldChange=gene,
+         #foldChange=gene,
          node_label='all',
          colorEdge=TRUE,
          circular=TRUE)
-#-------------------------------------------------------------------------------
-table(peaks.xls$chr)
-GR <- GRanges(seqnames=peaks.xls[,"chr"],
-              IRanges(peaks.xls[,"start"],
-                      peaks.xls[,"end"]))
-peakAnno <- annotatePeak(GR, tssRegion=c(-1000, 1000), 
-                         TxDb=txdb, 
-                         annoDb="org.Mm.eg.db")
-go <- as.GRanges(peakAnno)
-table(go$annotation)
-plotAnnoPie(peakAnno)
-#-------------------------------------------------------------------------------
-promoters <- go[go$annotation == 'Promoter',]
-promoters <- unique(promoters$geneId)
-head(promoters)
-promoter_result <- enrichGO(gene = promoters,
-                      OrgDb = org.Mm.eg.db,
-                      ont = "BP")
-GO_plot <- pairwise_termsim(promoter_result)
-emapplot(GO_plot,
-         color='p.adjust',
-         layout.params = list(layout = 'dh'),
-         edge.params = list(min = 0.5),
-         cex.params = list(line = 0.1),
-         pie='equal',
-         shadowtext=TRUE,
-         repel=TRUE,
-         cex_label_category=1,
-         showCategory = 50)
-goplot(GO_plot,
-       showCategory = 17,
-       color = "p.adjust",
-       layout = "sugiyama",
-       geom = "text")
-View(data.frame(promoter_result))
-#-------------------------------------------------------------------------------
-distal_intergenic <- go[go$annotation == "Distal Intergenic",]
-distal_intergenic <- unique(distal_intergenic$geneId)
-head(distal_intergenic)
-DI_result <- enrichGO(gene = distal_intergenic,
-                      #universe = allGeneGR,
-                      OrgDb = org.Mm.eg.db,
-                      ont = "BP")
-GO_plot <- pairwise_termsim(DI_result)
-emapplot(GO_plot,
-         color='p.adjust',
-         layout.params = list(layout = 'circle'),
-         edge.params = list(min = 0.5),
-         cex.params = list(line = 0.1),
-         pie='equal',
-         shadowtext=TRUE,
-         repel=TRUE,
-         cex_label_category=0.7,
-         showCategory = 50)
-goplot(GO_plot,
-  showCategory = 17,
-  color = "p.adjust",
-  layout = "sugiyama",
-  geom = "text")
-View(data.frame(DI_result))
+cat('Do go next')
 break
+#----GenomeAxisTrack----------------------------------------------------------
+gen<-'mm39'
+chr<-'chr9'
+#---far far away peaks
+#start<-79279000
+#end<-79800000
+rna_yaxis<-c(0,100)
+chip_yaxis<-c(0,400)
+
+#--far distal peaks
+#start<-79279000
+#end<-79400000
+
+#--closer peaks
+#start<-79282000
+#end<-79288000
+
+#--tester
+start<-68950627
+end<-69298000
+#bm <- useEnsembl(biomart = "ENSEMBL_MART_ENSEMBL", 
+#                 dataset = "mmusculus_gene_ensembl")
+#-------------------------------------------------------------------------------
+gtrack <- GenomeAxisTrack()
+
+#------show chromosome ideogram
+itrack <- IdeogramTrack(genome = gen,chromosome=chr)
+
+strack <- SequenceTrack(Mmusculus, chromosome = chr)
+biomTrack <- BiomartGeneRegionTrack(genome = "mm39",
+                                    #chromosome = chr, 
+                                    #start = 79282981,
+                                    #end = 79286980,
+                                    name = "ENSEMBL",
+                                    biomart = bm,
+                                    symbol = 'Rora',
+                                    background.panel = "#FFFEDB",
+                                    background.title = '#999883',
+                                    stacking = 'squish')
+rna1 <- DataTrack(range ='/home/em_b/work_stuff/chipseq/rna/replicates_combined/RNAseq_T3_3reps.bam',
+                  genome = "mm39",
+                  type = "horizon", 
+                  name = 'RNAseq_T3',
+                  #window = -1, 
+                  #chromosome = chr,
+                  ylim=rna_yaxis,
+                  #col='red',
+                  #background.panel = "white",
+                  background.title = "#999883")
+rna1
+rna2 <- DataTrack(range ='/home/em_b/work_stuff/chipseq/rna/replicates_combined/RNAseq_PBS_3reps.bam',
+                  genome = "mm39",
+                  type = "horizon", 
+                  name = 'RNAseq_PBS',
+                  #window = -1, 
+                  #chromosome = chr,
+                  ylim=rna_yaxis,
+                  #col='red',
+                  #background.panel = "white",
+                  background.title = "#999883")
+rna2
+chip1 <- DataTrack(range ='/home/em_b/work_stuff/chipseq/thra_0hr_comb/thra_0hr_comb.bam',
+                  genome = "mm39",
+                  type = "horizon", 
+                  name = 'THRA_0hr',
+                  #window = -1, 
+                  #chromosome = chr,
+                  ylim=chip_yaxis,
+                  #col='red',
+                  #background.panel = "white",
+                  background.title = "#999883")
+chip2 <- DataTrack(range ='/home/em_b/work_stuff/chipseq/thra_b22_comb/thra_b22_comb.bam',
+                   genome = "mm39",
+                   type = "horizon", 
+                   name = 'THRA_b22',
+                   #window = -1, 
+                   #chromosome = chr,
+                   ylim=chip_yaxis,
+                   #col='red',
+                   #background.panel = "white",
+                   background.title = "#999883")
+chip3 <- DataTrack(range ='/home/em_b/work_stuff/chipseq/thra_t3_comb/thra_t3_comb.bam',
+                   genome = "mm39",
+                   type = "horizon", 
+                   name = 'THRA_b22',
+                   #window = -1, 
+                   #chromosome = chr,
+                   ylim=chip_yaxis,
+                   #col='red',
+                   #background.panel = "white",
+                   background.title = "#999883")
+
+plotTracks(list(itrack,gtrack,biomTrack,strack,chip1,chip2,chip3,rna1,rna2),
+           transcriptAnnotation='symbol',
+           col=c('black'),
+           from = start,
+           to=end,
+           type=c('h','','gradient','g'),
+           legend=TRUE,
+           cex=1,
+           col.histogram='red',
+           reverseStrand = FALSE,
+           pch=21,
+           showBandId=FALSE,
+           cex.bands=1)
+
