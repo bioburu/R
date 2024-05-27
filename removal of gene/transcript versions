@@ -1,3 +1,0 @@
-matrix$Gene
-matrix$Gene<-sub('\\..*','',matrix$Gene)
-matrix$Gene
