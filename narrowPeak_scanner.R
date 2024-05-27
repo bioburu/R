@@ -1,18 +1,13 @@
+library(Gviz)
 library(GenomicRanges)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(TxDb.Mmusculus.UCSC.mm39.knownGene)
+library(biomaRt)
+library(BSgenome.Mmusculus.UCSC.mm39)
 library(ChIPseeker)
-library(clusterProfiler)
-library(org.Hs.eg.db)
-library(enrichplot)
-library(ReactomePA)
-library(plyranges)
 library(BRGenomics)
-library(ggplot2)
-library(UpSetR)
-library(ChIPpeakAnno)
-library(pathview)
-txdb<-TxDb.Hsapiens.UCSC.hg38.knownGene
-peak <- readPeakFile('/home/em_b/Desktop/gse129039/GSM3692173_ad11-thra1_peaks.narrowPeak.gz')
+txdb<-TxDb.Mmusculus.UCSC.mm39.knownGene
+#---------------------
+peak <- readPeakFile('/home/em_b/work_stuff/chipseq/thra_0hr_comb/peaks/thra_0hr_IgG_peaks.narrowPeak')
 table(seqnames(peak))
 peak
 peak<-tidyChromosomes(peak,
@@ -20,17 +15,18 @@ peak<-tidyChromosomes(peak,
                       keep.Y=FALSE,
                       keep.M = FALSE,
                       keep.nonstandard = FALSE,
-                      genome = 'hg38')
+                      genome = 'mm39')
 table(seqnames(peak))
 peak<-data.frame(peak)
 GR <- GRanges(seqnames=peak$seqnames,
               IRanges(peak$start,
                       peak$end))
+GR
 peakAnno <- annotatePeak(GR, tssRegion=c(-1000, 1000), 
                          TxDb=txdb, 
-                         annoDb="org.Hs.eg.db")
+                         annoDb="org.Mm.eg.db")
+View(data.frame(peakAnno))
 df<-(data.frame(peakAnno))
-genes<-df[!duplicated(df$SYMBOL),]
-cat(genes$SYMBOL)
-View(df)
-break 
+df<-cbind(df,peak)
+
+df<-df[order(df$V5, decreasing=TRUE),]
