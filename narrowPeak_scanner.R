@@ -63,25 +63,24 @@ cnetplot(edox,
          node_label='all',
          colorEdge=TRUE,
          circular=TRUE)
-cat('Do go next')
-go <- enrichGO(gene = rna_chip_up$geneId,OrgDb = org.Mm.eg.db,ont = "BP")
-View(data.frame(go))
-
-pathways<-c('GO:0007416','GO:0048167','GO:0035249','GO:0021953','GO:1905606',
-            'GO:0099174','GO:0099643','GO:0097106','GO:0046928','GO:0021549',
-            'GO:0045666','GO:0034329') 
-go@result = go@result[go@result$ID %in% pathways,]
-go@result
-
-
+go <- enrichGO(gene = anno_df$geneId,
+               OrgDb = org.Mm.eg.db,
+               ont = "BP")
+#View(data.frame(go))
+#---subset if necessary
+#pathways<-c('GO:0007416','GO:0048167','GO:0035249','GO:0021953','GO:1905606',
+#            'GO:0099174','GO:0099643','GO:0097106','GO:0046928','GO:0021549',
+#            'GO:0045666','GO:0034329') 
+#go@result = go@result[go@result$ID %in% pathways,]
+#go@result
 GO_plot <- pairwise_termsim(go)
-View(data.frame(GO_plot))
+#View(data.frame(GO_plot))
 emapplot(GO_plot,
          color='p.adjust',
          layout.params = list(layout = 'dh'),
          edge.params = list(min = 0.5),
          cex.params = list(line = 0.1),
-         pie='equal',
+         pie='circle',
          shadowtext=TRUE,
          repel=TRUE,
          cex_label_category=1,
