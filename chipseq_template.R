@@ -18,15 +18,6 @@ library(UpSetR)
 library(ChIPpeakAnno)
 library(pathview)
 #-----Part 1
-library(Gviz)
-library(GenomicRanges)
-library(TxDb.Mmusculus.UCSC.mm39.knownGene)
-library(biomaRt)
-library(BSgenome.Mmusculus.UCSC.mm39)
-library(ChIPseeker)
-library(BRGenomics)
-txdb<-TxDb.Mmusculus.UCSC.mm39.knownGene
-#---------------------
 peak <- readPeakFile('/home/em_b/work_stuff/chipseq/thra_0hr_comb/peaks/thra_0hr_IgG_peaks.narrowPeak')
 table(seqnames(peak))
 peak
