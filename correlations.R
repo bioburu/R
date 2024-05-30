@@ -2,19 +2,24 @@
 FeatureScatter(data, feature1 = "Foxo1", feature2 = 'Dio2',cols = c('skyblue','red','grey','black'),pt.size = 5,
                shuffle = TRUE,seed = 123)
 #---for data frame with variables as colnames (transposed)
-ggscatter(boxplot,
-          x='NEUROD1',y='EZH2',
+library(ggpubr)
+matrix<-read.csv('/home/em_b/work_stuff/chipseq/correlations/for_correlations.csv',
+                 row.names = 1)
+t<-data.frame(t(matrix))
+colnames(t)
+ggscatter(t,
+          x='Neurod2',y='Adcy1',
           add='reg.line',
           conf.int = TRUE,
           cor.coef = TRUE,
           cor.method = 'spearman',
-          xlab='NEUROD1',
-          ylab = 'EZH2',
+          xlab='Neurod2',
+          ylab = 'Adcy1',
           shape = 24,
           size=4,
           cor.coef.size = 4,
           ggtheme = theme_minimal(),
-          label='classes',
+          label=row.names(t),
           font.label = c(10,'bold.italic','blue'),
           add.params = list(color='red',fill='lightgrey'))
 
