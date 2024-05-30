@@ -1,5 +1,0 @@
-out <- as.data.frame(t(final), stringsAsFactors = FALSE)
-out <- lapply(out, type.convert, as.is = TRUE)
-out<-data.frame(out)
-str(out)
-gc()
