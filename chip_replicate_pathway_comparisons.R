@@ -41,7 +41,7 @@ test <- compareCluster(geneCluster   = genes,
                        ont='BP')
 #--subset
 test@compareClusterResult$ID
-dotplot(test, showCategory = 30, title = 'Biologial Process')
+dotplot(test, showCategory = 30, title = 'Biologial Process',size='Count')
 #--------------enrichGO molecular function
 test <- compareCluster(geneCluster   = genes,
                        fun           = 'enrichGO',
@@ -49,7 +49,7 @@ test <- compareCluster(geneCluster   = genes,
                        pAdjustMethod = "BH",
                        OrgDb=org.Mm.eg.db,
                        ont='MF')
-dotplot(test, showCategory = 50, title = 'Molecular Function')
+dotplot(test, showCategory = 50, title = 'Molecular Function',size='Count')
 #--------------enrichGO cellular component
 test <- compareCluster(geneCluster   = genes,
                        fun           = 'enrichGO',
@@ -57,4 +57,4 @@ test <- compareCluster(geneCluster   = genes,
                        pAdjustMethod = "BH",
                        OrgDb=org.Mm.eg.db,
                        ont='CC')
-dotplot(test, showCategory = 50, title = 'cellular stuff')
+dotplot(test, showCategory = 50, title = 'cellular stuff',size='Count')
