@@ -20,3 +20,5 @@ for (i in 1:nrow(pc$loadings)) {
   coords <- rbind(coords, rbind(c(0,0,0),pc$loadings[i,1:3]))
 }
 lines3d(coords, col="grey", lwd=4)
+
+https://planspacedotorg.wordpress.com/2013/02/03/pca-3d-visualization-and-clustering-in-r/
