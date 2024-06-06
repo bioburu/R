@@ -1,19 +1,18 @@
 library(biomaRt)
 library(dplyr)
-setwd('/home/em_b/Desktop/FCCC/t3_edits')
-matrix <- read.csv('quant_hg38.csv')
-matrix<-matrix[,-c(2:3)]
+setwd('/home/em_b/work_stuff/rnaseq')
+matrix <- read.csv('mm39_biomart.csv')
 Sys.setenv("http_proxy"="http://my.proxy.org:9999")
 listMarts()
 ensembl=useMart("ensembl")
 listDatasets(ensembl)
-ensembl=useDataset("hsapiens_gene_ensembl",
+ensembl=useDataset("mmusculus_gene_ensembl",
                    mart = ensembl)
 filters = listFilters(ensembl)
 attributes=listAttributes(ensembl)
 #-----------------------------------------------------------------
 dim(matrix)
-geneid <- matrix$Name
+geneid <- matrix$Gene
 head(geneid)
 listFilters(ensembl)
 listAttributes(ensembl)
@@ -22,7 +21,7 @@ genes <-getBM(attributes = c('ensembl_transcript_id_version','external_gene_name
               values = geneid,
               mart = ensembl)
 head(genes)
-df <- matrix[matrix$Name %in% unique(genes$ensembl_transcript_id_version),]
+df <- matrix[matrix$Gene %in% unique(genes$ensembl_transcript_id_version),]
 dim(df)
 dim(matrix)
 genes$ensembl_transcript_id_version
@@ -36,17 +35,47 @@ rownames(Ftable)<-make.names(Ftable$Gene,unique = TRUE)
 Ftable<-cbind(rownames(Ftable),Ftable)
 colnames(Ftable)[1] <- c('tracking_id')
 head(Ftable)
-#matrix<-data.frame(Ftable)
-#------Remove duplicate genes by p_value
-#matrix<-matrix%>%
-#  group_by(Gene)%>%
-#  arrange(p_value)%>%
-#  slice(1)
-#matrix<-data.frame(matrix)
-#str(matrix)
-break
-write.csv(Ftable,file = 'biomaRt.csv')
-#----if using older mm10 mouse assembly
-ensembl<-useEnsembl(biomart = 'genes',
-                    dataset = 'mmusculus_gene_ensembl',
-                    version=102)
+matrix<-Ftable
+matrix<-matrix[,-1]
+colnames(matrix)
+matrix<-matrix %>%
+  group_by(entrezgene_id) %>%
+  summarize(MB_0hr_1 = sum(MB_0hr_1),
+            MB_0hr_2 = sum(MB_0hr_2),
+            MB_0hr_3 = sum(MB_0hr_3),
+            MB_6hr_1 = sum(MB_6hr_1),
+            MB_6hr_2 = sum(MB_6hr_2),
+            MB_6hr_3 = sum(MB_6hr_3),
+            MB.PBS_1 = sum(MB.PBS_1),
+            MB.PBS_2 = sum(MB.PBS_2),
+            MB.PBS_3 = sum(MB.PBS_3),
+            MB.T3_1 = sum(MB.T3_1),
+            MB.T3_2 = sum(MB.T3_2),
+            MB.T3_3 = sum(MB.T3_3),
+            MB.ezh2i_1 = sum(MB.ezh2i_1),
+            MB.ezh2i_2 = sum(MB.ezh2i_2),
+            MB.ezh2i_3 = sum(MB.ezh2i_3),
+            MB.gfp_1 = sum(MB.gfp_1),
+            MB.gfp_2 = sum(MB.gfp_2),
+            MB.gfp_3 = sum(MB.gfp_3),
+            MB.neurod1_1 = sum(MB.neurod1_1),
+            MB.neurod1_2 = sum(MB.neurod1_2),
+            MB.neurod1_3 = sum(MB.neurod1_3),
+            MB.sh.neurod1_1 = sum(MB.sh.neurod1_1),
+            MB.sh.neurod1_2 = sum(MB.sh.neurod1_2),
+            MB.sh.neurod1_3 = sum(MB.sh.neurod1_3),
+            GNP.0h_1 = sum(GNP.0h_1),
+            GNP.0h_2 = sum(GNP.0h_2),
+            GNP.0h_3 = sum(GNP.0h_3),
+            GNP.PBS_1 = sum(GNP.PBS_1),
+            GNP.PBS_2 = sum(GNP.PBS_2),
+            GNP.PBS_3 = sum(GNP.PBS_3),
+            GNP.T3_1 = sum(GNP.T3_1),
+            GNP.T3_2 = sum(GNP.T3_2),
+            GNP.T3_3 = sum(GNP.T3_3),)
+matrix<-na.omit(matrix)
+row.names(matrix)<-matrix$entrezgene_id
+
+break 
+write.csv(matrix,file = 'mm39_entrez.matrix.csv')
+
