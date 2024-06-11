@@ -16,3 +16,7 @@ ggvenn(
 )
 v.table <- venn(x)
 print(v.table)
+
+x<-read.csv('3reps_thra_0hr.csv')
+y<-read.csv('3reps_thra_T3.csv')
+setdiff(x$x,y$x)
