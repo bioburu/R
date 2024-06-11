@@ -1,3 +1,18 @@
+#---for blacklist regions ie mm39
+library(excluderanges)
+library(GenomicRanges)
+library(AnnotationHub)
+data(mm39.excluderanges)
+
+ah <- AnnotationHub()
+query_data <- subset(ah, preparerclass == "excluderanges")
+query_data <- query(ah, c("excluderanges", "mm39"))
+query_data
+mm39<-query_data[['AH107321']]
+mm39
+#-----------------------------
+
+
 #----MUST BE ALIGNED TO MM10 OR HG38 
 library(DiffBind)
 library(GenomicRanges)
