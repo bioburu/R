@@ -1,30 +1,27 @@
-library(Rsubread)
-library(biomaRt)
-counts<-featureCounts(files = '/Users/burudpc/Desktop/geo_t3_rnaseq/SRR23386663.rmdup.sort.chr1.19.bam',
-                      annot.inbuilt = 'mm39',
-                      isPairedEnd = TRUE)
-matrix<-data.frame(counts$counts)
-matrix<-cbind(row.names(matrix),matrix)
-colnames(matrix)<-c('Gene','MB.T3_2')
-str(matrix)
-#--------------------biomart
-Sys.setenv("http_proxy"="http://my.proxy.org:9999")
-listMarts()
-ensembl=useMart('ENSEMBL_MART_ENSEMBL')
-listDatasets(ensembl)
-ensembl=useDataset("mmusculus_gene_ensembl",
-                   mart = ensembl)
-geneid <- matrix$Gene
-head(geneid)
-listFilters(ensembl)
-listAttributes(ensembl)
-genes <-getBM(attributes = c('external_gene_name','entrezgene_id'),
-              filters = 'entrezgene_id',
-              values = geneid,
-              mart = ensembl)
-head(genes)
-colnames(genes)[2]<-'Gene'
-colnames(genes)
-output <- merge(genes, matrix, by='Gene')
-setwd('/Users/burudpc/Desktop/geo_t3_rnaseq')
-write.csv(output,file='SRR23386663_output.csv')
+library(igvR)
+#BiocManager::install('Biostrings')
+igv<-igvR()
+setBrowserWindowTitle(igv, "ChIP-seq")
+setGenome(igv, 'mm39')
+break 
+showGenomicRegion(igv, 'Thra')
+for(i in 1:2) zoomOut(igv)
+roi <- getGenomicRegion(igv)
+gr.roi <- with(roi, GRanges(seqnames=chrom, ranges = IRanges(start, end)))
+param <- ScanBamParam(which=gr.roi, what = scanBamWhat())
+bamFile <- '/Users/burudpc/Desktop/bam/thra_0hr_comb.bam'
+alignments <- readGAlignments(bamFile, use.names=TRUE, param=param)
+track <- GenomicAlignmentTrack(trackName='crtl', alignments, visibilityWindow=10000000, trackHeight=200) 
+displayTrack(igv, track)
+
+bamFile <- '/Users/burudpc/Desktop/bam/thra_t3_comb.bam'
+alignments <- readGAlignments(bamFile, use.names=TRUE, param=param)
+track2 <- GenomicAlignmentTrack(trackName='T3', alignments, visibilityWindow=10000000, trackHeight=200) 
+displayTrack(igv,track2)
+
+bamFile <- '/Users/burudpc/Desktop/bam/thra_0hr_comb_input.bam'
+alignments <- readGAlignments(bamFile, use.names=TRUE, param=param)
+track3 <- GenomicAlignmentTrack(trackName='input', alignments, visibilityWindow=10000000, trackHeight=200) 
+displayTrack(igv,track3)
+
+break 
