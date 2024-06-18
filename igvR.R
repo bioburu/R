@@ -25,3 +25,9 @@ peak_df<-data.frame(chrom=peak$chr,
 head(peak_df)
 track <- DataFrameQuantitativeTrack("macs3_peaks", peak_df, color="red", autoscale=TRUE)
 displayTrack(igv, track)
+
+#----wig files
+bw.slice<-import('/home/em_b/work_stuff/chip_thra/GSM940399_chapseq/ChAPSeq_TRa.wig',
+                 which=gr.roi)
+track<-GRangesQuantitativeTrack('test',bw.slice,autoscale=TRUE)
+displayTrack(igv,track)
