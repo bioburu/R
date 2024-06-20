@@ -5,58 +5,77 @@ library(biomaRt)
 library(BSgenome.Mmusculus.UCSC.mm39)
 library(ChIPseeker)
 library(BRGenomics)
-#----GenomeAxisTrack----------------------------------------------------------
+#----Neurod2 and thra 
 gen<-'mm39'
-chr<-'chr9'
-bm <- useEnsembl(biomart = "ENSEMBL_MART_ENSEMBL", 
-                 dataset = "mmusculus_gene_ensembl")
+chr<-'chr11'
+start<-98116241
+end<-98759832
+chip_yaxis<-c(0,50)
+#bm <- useEnsembl(biomart = "ENSEMBL_MART_ENSEMBL", 
+#                 dataset = "mmusculus_gene_ensembl")
 biomTrack <- BiomartGeneRegionTrack(genome = "mm39",
-                                    #chromosome = chr, 
-                                    #start = 79282981,
-                                    #end = 79286980,
                                     name = "ENSEMBL",
                                     biomart = bm,
-                                    symbol = 'Gnb5')
-plotTracks(biomTrack,
-           transcriptAnnotation='symbol')
+                                    symbol = 'Thra',
+                                    background.panel = "#FFFEDB",
+                                    background.title = '#999883',
+                                    stacking = 'squish')
 gtrack <- GenomeAxisTrack()
-plotTracks(list(gtrack,biomTrack),
-           transcriptAnnotation='symbol')
-#------show chromosome ideogram
 itrack <- IdeogramTrack(genome = gen,chromosome=chr)
-plotTracks(list(gtrack,itrack,biomTrack),
-           transcriptAnnotation='symbol')
-cat('add bases to genomic tracks') 
 strack <- SequenceTrack(Mmusculus, chromosome = chr)
-plotTracks(list(gtrack,itrack,strack,biomTrack),
-           transcriptAnnotation='symbol')
-
-#-----enter in chip seq files here 
-chip1<-read.delim('/home/em_b/work_stuff/chipseq2/thra_0hr_comb/peaks/thra_0hr_IgG_peaks.narrowPeak',
-                 header = FALSE)
-head(chip1)
-colnames(chip1)<-c('chr','start','end','peak','score','NA','fold_change','-log10pval','-log10qval','summit')
-head(chip1)
-list<-c('chr1','chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10',
-        'chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19')
-chip1<-subset(chip1, subset = chr %in% list)
-table(chip1$chr)
-chip1<-DataTrack(data = chip1$fold_change, start = chip1$start,
-                end = chip1$end, chromosome = chr, genome = gen, 
-                name = 'THRA_0hr_peaks')
-#----------------------
-chip2<-read.delim('/home/em_b/work_stuff/chipseq2/thra_b22_comb/peaks/thra_b22_IgG_peaks.narrowPeak',
-                  header = FALSE)
-head(chip2)
-colnames(chip2)<-c('chr','start','end','peak','score','NA','fold_change','-log10pval','-log10qval','summit')
-head(chip2)
-list<-c('chr1','chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10',
-        'chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19')
-chip2<-subset(chip2, subset = chr %in% list)
-table(chip2$chr)
-chip2<-DataTrack(data = chip2$fold_change, start = chip2$start,
-                 end = chip2$end, chromosome = chr, genome = gen, 
-                 name = 'THRA-B22_peaks')
+bam1 <- DataTrack(range ='/home/em_b/work_stuff/chip_thra/bam/D1.0h.tra.rmdup.sort.bam',
+                  genome = "mm39",
+                  name = '0hr_thra',
+                  #chromosome = chr,
+                  ylim=chip_yaxis,
+                  background.title = "#999883",
+                  col='red')
+bam1
+bam2 <- DataTrack(range ='/home/em_b/work_stuff/chip_thra/bam/D3.t3.tra.rmdup.sort.bam',
+                  genome = "mm39",
+                  name = 'T3_thra',
+                  #chromosome = chr,
+                  ylim=chip_yaxis,
+                  background.title = "#999883",
+                  col='green')
+bam2
+bam3 <- DataTrack(range ='/home/em_b/work_stuff/chip_thra/bam/E1.0h.ME3.rmdup.sort.bam',
+                  genome = "mm39",
+                  name = '0hr_Me3',
+                  #chromosome = chr,
+                  ylim=chip_yaxis,
+                  background.title = "#999883",
+                  col='blue')
+bam3
+bam4 <- DataTrack(range ='/home/em_b/work_stuff/chip_thra/bam/E3_t3_me3.rmdup.sort.bam',
+                  genome = "mm39",
+                  name = 'T3_Me3',
+                  #chromosome = chr,
+                  ylim=chip_yaxis,
+                  background.title = "#999883",
+                  col='skyblue')
+bam4
+bam5 <- DataTrack(range ='/home/em_b/work_stuff/chip_thra/bam/J1.0h.IgG.sort.rmdup.bam',
+                  genome = "mm39",
+                  name = 'IgG_ctrl',
+                  #chromosome = chr,
+                  ylim=chip_yaxis,
+                  background.title = "#999883",
+                  col='grey')
+bam5
+plotTracks(list(itrack,gtrack,biomTrack,strack,bam1,bam2,bam3,bam4,bam5),
+           transcriptAnnotation='symbol',
+           #col=c('black'),
+           from = start,
+           to=end,
+           type=c('h','','',''),
+           legend=TRUE,
+           cex=1,
+           #col.histogram='red',
+           reverseStrand = FALSE,
+           pch=21,
+           showBandId=FALSE,
+           cex.bands=1)
 #----------------------
 chip3<-read.delim('/home/em_b/work_stuff/chipseq2/thra_t3_comb/peaks/thra_t3_IgG_peaks.narrowPeak',
                   header = FALSE)
@@ -82,31 +101,4 @@ plotTracks(list(gtrack,itrack,strack,biomTrack,
            type=c('histogram'),
            legend=TRUE)
 gc()
-
-#------enter in rnaseq files here 
-rna1 <- DataTrack(range ='/home/em_b/work_stuff/chipseq2/rna/SRR23386662/SRR23386662.rmdup.sort.chr.bam',
-                     genome = "mm39",
-                     type = "horizon", 
-                     name = 'Rnaseq_T3',
-                     #window = -1, 
-                     chromosome = 'chr9')
-rna2 <- DataTrack(range ='/home/em_b/work_stuff/chipseq2/rna/SRR23386665/SRR23386665.rmdup.sort.chr.bam',
-                  genome = "mm39",
-                  type = "horizon", 
-                  name = 'Rnaseq_pbs',
-                  #window = -1, 
-                  chromosome = 'chr9')
-cat('options for types are: histogram,horizon,heatmap,polygon,mountain,b and you can layer')
-plotTracks(list(gtrack,itrack,strack,biomTrack,
-                chip1,chip2,chip3,rna1,rna2),
-           chromosome = chr,
-           transcriptAnnotation='symbol',
-           #extend.left = 0.5,
-           #extend.right = 100000,
-           col=c('black'),
-           from = 75013570,
-           to=75545923,
-           type=c('b','histogram'),
-           legend=TRUE)
-
 
