@@ -3,6 +3,8 @@ library(biomaRt)
 library(dplyr)
 library(DESeq2)
 library(EnhancedVolcano)
+library(ggvenn)
+library(gplots)
 counts<-featureCounts(files = '/home/em_b/Desktop/dio2_il6/bam/GA1_norm_ast.rmdup.sort.chr1.19.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
@@ -131,13 +133,24 @@ EnhancedVolcano(results,
                 pCutoff = 0.05,
                 FCcutoff = 1.5,
                 shape = 5)
-
-break 
 x<-data.frame(results)
 x<-x[order(x$pvalue, decreasing=FALSE),]
 x<-subset(x,padj< 0.05)
 summary(x)
 upreg<-subset(x,log2FoldChange> 1.5)
 downreg<-subset(x,log2FoldChange< -1.5)
-#write.csv(upreg,file='upreg_rna_df.csv')
-#write.csv(downreg,file='downreg_rna_df.csv')
+#-------------------------------------------------------------------------------
+total_genes<-row.names(output)
+upreg_genes<-row.names(upreg)
+downreg_genes<-row.names(downreg)
+venn <- list(upregulated = upreg_genes,
+             downregulated = downreg_genes,
+             total = total_genes)
+venn
+ggvenn(
+  venn, 
+  fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
+  stroke_size = 0.5, set_name_size = 4
+)
+v.table <- venn(venn)
+print(v.table)
