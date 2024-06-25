@@ -5,6 +5,8 @@ library(DESeq2)
 library(EnhancedVolcano)
 library(ggvenn)
 library(gplots)
+library(ReactomePA)
+library(clusterProfiler)
 counts<-featureCounts(files = '/home/em_b/Desktop/dio2_il6/bam/GA1_norm_ast.rmdup.sort.chr1.19.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
@@ -154,3 +156,56 @@ ggvenn(
 )
 v.table <- venn(venn)
 print(v.table)
+#-------------------------------------------------------------------------------
+up.entrez <-getBM(attributes = c('external_gene_name','entrezgene_id'),
+              filters = 'external_gene_name',
+              values = upreg_genes,
+              mart = ensembl)
+reactome <- enrichPathway(up.entrez$entrezgene_id,
+                          organism = 'mouse')
+dotplot(reactome,
+        #x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Reactome pathway analysis')
+#-------------------------------------------------------------------------------
+down.entrez <-getBM(attributes = c('external_gene_name','entrezgene_id'),
+                  filters = 'external_gene_name',
+                  values = downreg_genes,
+                  mart = ensembl)
+reactome <- enrichPathway(down.entrez$entrezgene_id,
+                          organism = 'mouse')
+dotplot(reactome,
+        #x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Reactome pathway analysis')
+#-------------------------------------------------------------------------------
+go <- enrichGO(gene = up.entrez$entrezgene_id,
+               OrgDb = org.Mm.eg.db,
+               ont = "BP")
+dotplot(go,
+        #x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Gene Ontology biological process')
+go <- enrichGO(gene = down.entrez$entrezgene_id,
+               OrgDb = org.Mm.eg.db,
+               ont = "BP")
+dotplot(go,
+        #x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Gene Ontology biological process')
