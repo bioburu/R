@@ -12,6 +12,10 @@ library(ROCR)
 library(Matrix)
 library(DESeq2)
 library(EnhancedVolcano)
+library(BiocParallel)
+param<-MulticoreParam(workers = 6,
+                      progressbar = TRUE)
+register(param)
 setwd('/home/em_b/Desktop/scRNAseq_manuscript/gbm/R2_N')
 counts <- readMM("matrix.mtx.gz")
 genes <- read_tsv("genes.tsv.gz", col_names = FALSE)
@@ -67,13 +71,16 @@ deseq<-DESeqDataSetFromMatrix(countData = Matrix,
 gc()
 deseq
 deseq<-estimateSizeFactors(deseq)
+break 
 DE<-DESeq(deseq,
           test = c('LRT'),
           useT = TRUE,
           fitType = 'glmGamPoi',
           minmu = 1e-6,
           minReplicatesForReplace = Inf,
-          reduced = ~ 1)
+          reduced = ~ 1,
+          parallel = TRUE,
+          BPPARAM = param)
 resLRT <- results(DE)
 resLRT<-data.frame(resLRT)
 resLRT
