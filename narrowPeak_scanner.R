@@ -44,6 +44,10 @@ anno_df<-data.frame(peakAnno)
 reactome <- enrichPathway(anno_df$geneId,
                           organism = 'mouse')
 reactome
+#--if subsetting use
+#pathways<-c('R-MMU-6809371')
+#reactome@result<-reactome@result[reactome@result$ID%in%pathways,]
+
 dotplot(reactome,
         x='Count',
         color= 'qvalue',
