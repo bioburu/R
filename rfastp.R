@@ -2,7 +2,7 @@ library(Rfastp)
 setwd('/home/deviancedev/Desktop/drive_nov2023/FCCC/RNAseq_exosomes/RNAseq_exosomes_reads1')
 pe_json_report <- rfastp(read1 = 'A_Cereb1_1.fq.gz',
                          read2 = 'A_Cereb1_2.fq.gz',
-                         outputFastq = paste0('A_Cereb1_read1'),
+                         outputFastq = paste0('A_Cereb1_filtered'),
                          adapterTrimming = TRUE, qualityFiltering = TRUE,
                          qualityFilterPhred = 30)
 summary <- qcSummary(pe_json_report)
