@@ -6,44 +6,29 @@ library(org.Mm.eg.db)
 library(biomaRt)
 library(dplyr)
 library(RColorBrewer)
-setwd('/home/em_b/work_stuff/FCCC/T3_RNAseq/bulk_RNAseq_raw_files')
-matrix<-read.csv('biomart.mm39.csv')
+library(EnhancedVolcano)
+library(ReactomePA)
+setwd('/home/em_b/Desktop/AST_OPC_files')
+matrix<-read.csv('matrix_mm39.csv')
 str(matrix)
-#---if subsetting genes
-list<-c('Neurod1','Cntn2','Map1a','Rbfox3',
-        'Nefl','Fyn','Reln','Unc13a',
-        'Ppp2r5b','Trim67','Cnr1','Kidins220',
-        'Dpysl3','Rims1','Atp8a2','Mapt',
-        'L1cam','Apbb1','Ss18l1',
-        'Rufy3','Ndrg4','Pacsin1','Fkbp1b',
-        'Neurod2','Sez6',
-        'Map1b')
-matrix<-subset(matrix, subset = Gene %in% list)
-row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
-matrix<-matrix[,-1]
+row.names(matrix)<-make.names(matrix$external_gene_name,unique = TRUE)
+matrix<-matrix[,-c(1:2)]
 head(matrix)
-tester<-matrix[,-c(1:9,19:27)]
-#tester<-tester[,-c(3,5,8)]
-tester<-cbind(tester,tester[,c(4:6)])
-tester<-tester[,-c(4:6)]
-colnames(tester)<-c('GFP_overexp','GFP_overexp.1','GFP_overexp.2',
-                    'shNeurod1','shNeurod1.1','shNeurod1.2',
-                    'Neurod1_overexp','Neurod1_overexp.1','Neurod1_overexp.2')
-#----deseq did not work
-names<-colnames(tester)
+tester<-round(matrix)
+astrocytes<-tester[,-c(5:8,11:12)]
+names<-colnames(astrocytes)
 names
-condition<-c('A','A','A','A','A','A','B','B','B')
-type<-c('paired','paired','paired','paired','paired','paired','paired','paired','paired')
+condition<-c('A','A','A','A','B','B')
+type<-c('paired','paired','paired','paired','paired','paired')
 coldata<-data.frame(cbind(names,condition,type))
 row.names(coldata)<-make.names(coldata$names,
                                unique=TRUE)
 coldata<-coldata[,-1]
 coldata
 #-----------------------------------------------------------------------------
-tester<-round(tester)
-colnames(tester)
+colnames(astrocytes)
 row.names(coldata)
-deseq<-DESeqDataSetFromMatrix(countData = tester,colData = coldata,design = ~ condition)
+deseq<-DESeqDataSetFromMatrix(countData = astrocytes,colData = coldata,design = ~ condition)
 deseq
 DE<-DESeq(deseq)
 plotMA(DE,ylim=c(-5,5))
@@ -51,11 +36,84 @@ plotDispEsts(DE)
 #-------------------------------------------------------------------------------
 results<-results(DE)
 results
+EnhancedVolcano(results,
+                lab = row.names(results),
+                x='log2FoldChange',
+                y='pvalue',
+                title = 'Differential gene expressions of Tu-AST and norm-AST',
+                subtitle = '',
+                legendLabels = NULL,
+                legendIconSize = -1,
+                legendPosition = 'bottom',
+                pCutoff = 0.01,
+                FCcutoff = 1.5,
+                shape = 1,
+                ylim = c(0,100),
+                xlim = c(-9,11))
+#-----------------------------------------------------------------------
 x<-data.frame(results)
 x<-x[order(x$pvalue, decreasing=FALSE),]
-x<-subset(x,padj< 0.05)
+x<-subset(x,pvalue< 0.01)
 summary(x)
-upreg<-subset(x,log2FoldChange> 0)
+upreg<-subset(x,log2FoldChange> 1.5)
+#------------------------------------------------------------------
+matrix<-read.csv('matrix_mm39.csv')
+upreg_matrix<-subset(matrix,matrix$external_gene_name%in%row.names(upreg))
+reactome <- enrichPathway(upreg_matrix$entrezgene_id,
+                          organism = 'mouse')
+reactome_df<-data.frame(reactome)
+reactome_df<-reactome_df[order(reactome_df$Count, decreasing=TRUE),]
+pathways<-reactome_df$ID
+reactome@result<-reactome@result[reactome@result$ID%in%pathways,]
+dotplot(reactome,
+        x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Tu-AST and norm-AST Reactome pathways upregulated genes',
+        showCategory=24)
+#-------------------------------------------------------------------------------
+go <- enrichGO(gene = upreg_matrix$entrezgene_id,
+               OrgDb = org.Mm.eg.db,
+               ont = "BP")
+dotplot(go,
+        x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Tu-AST and norm-AST GO:Biological Process pathways upregulated genes',
+        showCategory=30)
+#--------------------------------------------------------------------
+go <- enrichGO(gene = upreg_matrix$entrezgene_id,
+               OrgDb = org.Mm.eg.db,
+               ont = "CC")
+dotplot(go,
+        x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Tu-AST and norm-AST GO:Cellular Component pathways upregulated genes',
+        showCategory=30)
+#-------------------------------------------------------------------------------
+go <- enrichGO(gene = upreg_matrix$entrezgene_id,
+               OrgDb = org.Mm.eg.db,
+               ont = "MF")
+dotplot(go,
+        x='Count',
+        color= 'qvalue',
+        size= NULL,
+        split=NULL,
+        font.size=15,
+        label_format=50,
+        title='Tu-AST and norm-AST GO:Molecular Function pathways upregulated genes',
+        showCategory=30)
+break 
 df<-cbind(row.names(upreg),upreg)
 colnames(df)[1]<-'Gene'
 #------------------------------------
