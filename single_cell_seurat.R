@@ -60,14 +60,12 @@ DimPlot(data,
         cols.highlight = c('grey'),
         dims = c(1,2))
 break 
-
 FindMarkers(data,
             ident.1 = '7',
             ident.2 = '5',
             logfc.threshold=0,
             only.pos = TRUE,
             test.use='bimod')
-
 #---tester
 VlnPlot(data, features = c('ULK1', 'ATG13', 'FIP200', 'ATG101', 'ATG9A'),cols = c())
 
@@ -96,13 +94,10 @@ VlnPlot(data, features = c('EPCAM','CD24','SOX17'),cols = c())
 VlnPlot(data, features = c('IL1B','IL2RG','IL6R','IL6ST','CXCL8',
                            'IL10RA','IL18','IL32','TNF','TNFAIP3',
                            'TNFSF10','TGFB1','CSF1','CSF1R'),cols = c())
-
-#---damage associated molecular pattern (alarmins)-----------------------
-VlnPlot(data, features = c('HMGB1','HMGB2','HMGB3','VIM','TP53','RNF135','HSP90AA1','HSPB1','HSPA1A','HSF1','HSF2','HSPA4')) 
-VlnPlot(data, features = c('HSPA5','HSP90AB1','HSPA1B','HSPD1','HSPD1','HSPH1','S100A1','S100A10','S100A11','S100A13','S100A2','S100A3')) 
-VlnPlot(data, features = c('S100A4','S100A5','S100A6','S100A7A','S100A8','S100A9','S100B','S100G','S100P','S100PBP','S100Z','MRPL1')) 
-VlnPlot(data, features = c('SAAL1','AGER','SYK','CARD6','CARD8','CARD9','CARD11','CARD14','LGALS1','SAP130','TREM1','TREML2')) 
-VlnPlot(data, features = c('DDX12P','LY96','PTAFR','SCARB1','SCARB2','MAVS','RNF135','SEC14L1','TRIM25','TFAM')) 
+new_idents<-c('tumor','tumor','M2mac','tumor','OPC','T_cells','OPC','tumor','M1macro','OPC','FB')
+names(new_idents) <- levels(data)
+data <- RenameIdents(data, new_idents)
+levels(data)
 break 
 #-------------------------------------------
 markers<-FindMarkers(data,
@@ -127,9 +122,10 @@ go <- enrichGO(gene = genes$entrezgene_id,
                ont = "BP")
 go1<-data.frame(go)
 go1<-go1[order(go1$Count, decreasing=TRUE),]
+#-----------------------------------------------------------------------
 GO_search<-select(org.Hs.eg.db,
                                keytype = 'GOALL',
-                               keys = 'GO:0016032',
+                               keys = 'GO:0198738',
                                columns = c('SYMBOL','GENENAME','ENTREZID'))
 list<-GO_search$SYMBOL
 list
@@ -155,6 +151,7 @@ DoHeatmap(
   group.bar.height = 0.02,
   combine = TRUE
 )
+
 #-----If subsetting use
 #----------Isolate CD45+  -------------------------------------
 data$CD45.groups <- 'CD45.pos'
