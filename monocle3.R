@@ -11,6 +11,9 @@ library(ggridges)
 library(biomaRt)
 library(clusterProfiler)
 library(org.Hs.eg.db)
+library(DESeq2)
+library(SeuratWrappers)
+library(monocle3)
 cat('GSE234832. Patient-derived brain metastasis models')
 setwd('/home/em_b/work_stuff/brain_metastasis/GSE234832_RAW')
 barcodes_path <- 'GSM7475327_LUBMET7.barcodes.tsv.gz'
@@ -91,32 +94,28 @@ VlnPlot(data_subset, features = c('OLIG2','SOX2','SOX9','SOX10','MOG','VIM',
         cols = c())
 #-------------------------------------------------------------------------------
 cds <- as.cell_data_set(data_subset)
+cds
 head(colData(cds))
-recreate.partitions <- c(rep(1,length(cds@colData@rownames)))
-head(recreate.partitions)
-names(recreate.partitions) <- cds@colData@rownames
-head(recreate.partitions)
-recreate.partitions <- as.factor(recreate.partitions)
-head(recreate.partitions)
-cds@clusters@listData[["UMAP"]][["partitions"]] <- recreate.partitions
-head(data_subset@active.ident)
-list.cluster <- data_subset@active.ident
-head(list.cluster)
-cds@clusters@listData[["UMAP"]][["clusters"]] <- list.cluster
-cds@int_colData@listData[["reducedDims"]]@listData[["UMAP"]] <- data_subset@reductions$umap@cell.embeddings
+#-------------------------------------------------------------------------------
+#----Edit partitions layer
+cds@clusters@listData$UMAP$partitions
+names(cds@clusters@listData$UMAP$partitions) <- cds@colData@rownames
+cds
+cds@clusters@listData
+cds@clusters@listData$UMAP$clusters<-data_subset@active.ident
 cds<-learn_graph(cds,
                  use_partition = FALSE)
 head(clusters(cds))
 cds <- order_cells(cds, reduction_method = "UMAP",
                    root_cells = colnames(cds[,clusters(cds)=='OPC']))
-plot_cells(cds,
+p1<-plot_cells(cds,
            reduction_method = c('UMAP'),
            show_trajectory_graph = TRUE,
            trajectory_graph_color = 'red',
            group_label_size = 10,
            cell_size = 1,
            color_cells_by = c('pseudotime'))
-DimPlot(data_subset,
+p2<-DimPlot(data_subset,
         reduction = 'umap',
         label=TRUE,
         label.size = 6,
@@ -127,6 +126,41 @@ DimPlot(data_subset,
         seed=1,
         cols.highlight = c('grey'),
         dims = c(1,2))
+p1+p2
+gene_fits<-fit_models(cds,model_formula_str = '~pseudotime')
+head(gene_fits)
+#----fit_coefs show genes which vary as a function of time
+fit_coefs<-coefficient_table(gene_fits)
+fit_coefs <- fit_coefs %>% filter(term == 'pseudotime')
+fit_coefs<-subset(fit_coefs,q_value< 0.05)
+fit_coefs<-fit_coefs[,c(2,6,7,13)]
+#------pseudotime vs gene expression levels
+cds_subset<-cds[row.names(subset(rowData(cds),
+                                 row.names(rowData(cds))%in%c('OLIG2','SOX9','GFAP','VIM','S100B','MOG','SPP1','TF',
+                                                              'NGFR','DPYSL5','TBC1D12','GSN','CAVIN1','ELOVL1','MARCKS'))),]
+cds_subset
+colData(cds_subset)$pseudotime<-pseudotime(cds_subset,reduction_method = 'UMAP')
+colData(cds_subset)
+plot_genes_violin(cds_subset,
+                  group_cells_by="pseudotime",
+                  ncol=3,
+                  nrow = 5,
+                  label_by_short_name = FALSE,
+                  normalize = FALSE,
+                  log_scale = FALSE)
+#-------------------------------------------------------------------------------
+cds_subset<-cds[row.names(subset(rowData(cds),
+                                 row.names(rowData(cds))%in%c('HAPLN2','IER2','DNAJB1','BACE1','NRBP2',
+                                                              'RAPGEF5','PMP2','MT3','CLU','GPR37L1'))),]
+cds_subset
+colData(cds_subset)$pseudotime<-pseudotime(cds_subset,reduction_method = 'UMAP')
+colData(cds_subset)
+plot_genes_violin(cds_subset,
+                  group_cells_by="pseudotime",
+                  ncol=2,
+                  label_by_short_name = FALSE,
+                  normalize = FALSE,
+                  log_scale = FALSE)
 cds_pr_test<-graph_test(cds,neighbor_graph = 'principal_graph',cores = 4)
 cds_pr_test<-subset(cds_pr_test,q_value<0.05)
 cds_pr_test<-cds_pr_test[order(cds_pr_test$morans_I, decreasing=TRUE),]
@@ -145,17 +179,8 @@ data_subset <- AddMetaData(
 FeaturePlot(data_subset, c("astrocyte_trajectory"), pt.size = 1) & scale_color_viridis_c()
 FeaturePlot(data_subset,
             features = c(row.names(cds_pr_test)[1:20]))
-my_genes <- row.names(subset(fData(cds), gene_short_name %in% c('GFAP','OLIG2','S100B','SOX9'))) 
-cds_subset <- cds[my_genes,]
-plot_genes_in_pseudotime(cds_subset,
-                         cell_size = 5,
-                         color_cells_by = "monocle3_pseudotime" )
-FeaturePlot(data_subset, features = c('GFAP','OLIG2','S100B','SOX9'))
-break 
-VlnPlot(data_subset, features = c(row.names(cds_pr_test)[41:60]))
-VlnPlot(data_subset, features = c(row.names(cds_pr_test)[61:80]))
 VlnPlot(data_subset, features = c('MARCKS','CLU','S100B','MT3','TUBB2B','PLP1',
                                   'FOSB','GPR37L1','SLC1A3','HSPA1B',
                                   'EGR1','DNAJB1','SPP1','HAPLN2','TF',
                                   'IER2'))
-
+break 
