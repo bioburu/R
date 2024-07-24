@@ -1,9 +1,5 @@
 reactome <- enrichPathway(upreg_matrix$entrezgene_id,
                           organism = 'mouse')
-reactome_df<-data.frame(reactome)
-reactome_df<-reactome_df[order(reactome_df$Count, decreasing=TRUE),]
-pathways<-reactome_df$ID
-reactome@result<-reactome@result[reactome@result$ID%in%pathways,]
 dotplot(reactome,
         x='Count',
         color= 'qvalue',
