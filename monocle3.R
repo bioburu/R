@@ -183,4 +183,42 @@ VlnPlot(data_subset, features = c('MARCKS','CLU','S100B','MT3','TUBB2B','PLP1',
                                   'FOSB','GPR37L1','SLC1A3','HSPA1B',
                                   'EGR1','DNAJB1','SPP1','HAPLN2','TF',
                                   'IER2'))
+# a helper function to identify the root principal points:
+summary(cds@colData$seurat_clusters)
+#---time bin is the earliest group assigned by user from colData metadata
+get_earliest_principal_node <- function(cds, time_bin="0"){
+  cell_ids <- which(colData(cds)[, "seurat_cluster"] == time_bin)
+  closest_vertex <-cds@principal_graph_aux[["UMAP"]]$pr_graph_cell_proj_closest_vertex
+  closest_vertex <- as.matrix(closest_vertex[colnames(cds), ])
+  root_pr_nodes <-igraph::V(principal_graph(cds)[["UMAP"]])$name[as.numeric(names(which.max(table(closest_vertex[cell_ids,]))))]
+  root_pr_nodes
+}
+cds_3d <- reduce_dimension(cds, max_components = 3)
+cds_3d <- cluster_cells(cds_3d)
+cds_3d <- learn_graph(cds_3d)
+cds_3d <- order_cells(cds_3d, root_pr_nodes=get_earliest_principal_node(cds))
+plot_cells(cds,
+           color_cells_by = "seurat_clusters",
+           label_cell_groups=TRUE,
+           group_label_size = 10,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=2,
+           cell_size = 1)
+plot_cells_3d(
+  cds_3d,
+  dims = c(1, 2, 3),
+  reduction_method = c("UMAP", "tSNE", "PCA", "LSI", "Aligned"),
+  color_cells_by = "monocle3_pseudotime",
+  genes = NULL,
+  show_trajectory_graph = FALSE,
+  trajectory_graph_color = "red",
+  trajectory_graph_segment_size = 10,
+  norm_method = c("log"),
+  color_palette = NULL,
+  color_scale = "Viridis",
+  cell_size =200 ,
+  alpha = 1,
+  min_expr = 0.1
+)
 break 
