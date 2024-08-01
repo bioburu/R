@@ -108,6 +108,8 @@ cds_3d <- reduce_dimension(cds, max_components = 3)
 cds_3d <- cluster_cells(cds_3d)
 cds_3d <- learn_graph(cds_3d)
 break
+saveRDS(cds_3d,file = 'cds_cortical_plate_17wks.rda')
+saveRDS(data_subset,file = 'seurat_cortical_plate_17wks.rda')
 plot_cells_3d(
   cds_3d,
   dims = c(1, 2, 3),
@@ -140,7 +142,7 @@ plot_cells_3d(
   alpha = 1,
   min_expr = 0.1
 )
-p3<-VlnPlot(data_subset,features = c('OLIG2','SOX9','SOX10','MOG','VIM',
+p3<-VlnPlot(data_subset,features = c('OLIG2','SOX9','RORA','MOG','VIM',
                           'GFAP','CD44','S100B','SLC1A2','SLC1A3',
                           'MAP2','DIO2','RBFOX3'))
 p2+p3
@@ -154,7 +156,7 @@ wtf<-FindMarkers(data_subset,
                  min.pct = 0.5)
 cat(row.names(wtf))
 VlnPlot(data_subset,features = c(row.names(wtf))[1:20])
-saveRDS(cds_3d,file = 'cortical_plate_17wks.rda')
+break 
 cds_3D<-readRDS('/home/em_b/Downloads/GSE217511_RAW/cortical_plate_17wks.rda')
 break 
 #-----fit model statistics 
