@@ -15,113 +15,96 @@ library(DESeq2)
 library(SeuratWrappers)
 library(monocle3)
 setwd('/home/em_b/work_stuff/human_develop_timecourse/GSE217511_RAW')
+#-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720852_9C_barcodes.tsv.gz'
 features_path <- 'GSM6720852_9C_features.tsv.gz'
 matrix_path <- 'GSM6720852_9C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data1 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_17wks')
+data1 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '17wks')
 dim(data1)
-data1<-subset(x = data1, downsample = 3718)
+data1<-subset(x = data1, downsample = 3000)
 dim(data1)
-#-------------------------------------------------------------------------------
-barcodes_path <- 'GSM6720854_24C_barcodes.tsv.gz'
-features_path <- 'GSM6720854_24C_features.tsv.gz'
-matrix_path <- 'GSM6720854_24C_matrix.mtx.gz'
-matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data2 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_18wks')
-dim(data2)
-data2<-subset(x = data2, downsample = 3718)
-dim(data2)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720856_26C_barcodes.tsv.gz'
 features_path <- 'GSM6720856_26C_features.tsv.gz'
 matrix_path <- 'GSM6720856_26C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data3 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_19wks')
-dim(data3)
-data3<-subset(x = data3, downsample = 3718)
-dim(data3)
+data2 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '19wks')
+dim(data2)
+data2<-subset(x = data2, downsample = 3000)
+dim(data2)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720860_56C_barcodes.tsv.gz'
 features_path <- 'GSM6720860_56C_features.tsv.gz'
 matrix_path <- 'GSM6720860_56C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data4 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_20wks')
-dim(data4)
-data4<-subset(x = data4, downsample = 3718)
-dim(data4)
+data3 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '20wks')
+dim(data3)
+data3<-subset(x = data3, downsample = 3000)
+dim(data3)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720864_30C_barcodes.tsv.gz'
 features_path <- 'GSM6720864_30C_features.tsv.gz'
 matrix_path <- 'GSM6720864_30C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data5 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_22wks')
-dim(data5)
-data5<-subset(x = data5, downsample = 3718)
-dim(data5)
-#-------------------------------------------------------------------------------
-barcodes_path <- 'GSM6720870_62C_barcodes.tsv.gz'
-features_path <- 'GSM6720870_62C_features.tsv.gz'
-matrix_path <- 'GSM6720870_62C_matrix.mtx.gz'
-matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data6 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_24wks')
-dim(data6)
-data6<-subset(x = data6, downsample = 3718)
-dim(data6)
+data4 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '22wks')
+dim(data4)
+data4<-subset(x = data4, downsample = 3000)
+dim(data4)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720874_3C_barcodes.tsv.gz'
 features_path <- 'GSM6720874_3C_features.tsv.gz'
 matrix_path <- 'GSM6720874_3C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data7 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_26wks')
-dim(data7)
-data7<-subset(x = data7, downsample = 3718)
-dim(data7)
+data5 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '26wks')
+dim(data5)
+data5<-subset(x = data5, downsample = 3000)
+dim(data5)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720876_60C_barcodes.tsv.gz'
 features_path <- 'GSM6720876_60C_features.tsv.gz'
 matrix_path <- 'GSM6720876_60C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data8 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_32wks')
-dim(data8)
-data8<-subset(x = data8, downsample = 3718)
-dim(data8)
+data6 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '32wks')
+dim(data6)
+data6<-subset(x = data6, downsample = 3000)
+dim(data6)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720880_6C_barcodes.tsv.gz'
 features_path <- 'GSM6720880_6C_features.tsv.gz'
 matrix_path <- 'GSM6720880_6C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data9 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'cortical_plate_38wks')
-dim(data9)
-data9<-subset(x = data9, downsample = 3718)
-dim(data9)
+data7 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '38wks')
+dim(data7)
+data7<-subset(x = data7, downsample = 3000)
+dim(data7)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720882_31C_barcodes.tsv.gz'
 features_path <- 'GSM6720882_31C_features.tsv.gz'
 matrix_path <- 'GSM6720882_31C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data10 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'neocortex_28yrs')
-dim(data10)
-data10<-subset(x = data10, downsample = 3718)
-dim(data10)
+data8 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '28yrs')
+dim(data8)
+data8<-subset(x = data8, downsample = 3000)
+dim(data8)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720884_2C_barcodes.tsv.gz'
 features_path <- 'GSM6720884_2C_features.tsv.gz'
 matrix_path <- 'GSM6720884_2C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data11 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'neocortex_45yrs')
-dim(data11)
-data11<-subset(x = data11, downsample = 3718)
-dim(data11)
+data9 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '45yrs')
+dim(data9)
+data9<-subset(x = data9, downsample = 3000)
+dim(data9)
 #-------------------------------------------------------------------------------
 barcodes_path <- 'GSM6720886_20C_barcodes.tsv.gz'
 features_path <- 'GSM6720886_20C_features.tsv.gz'
 matrix_path <- 'GSM6720886_20C_matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data12 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'neocortex_53yrs')
-dim(data12)
-data12<-subset(x = data12, downsample = 3718)
-dim(data12)
+data10 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = '53yrs')
+dim(data10)
+data10<-subset(x = data10, downsample = 3000)
+dim(data10)
 #-------------------------------------------------------------------------------
 dim(data1)
 dim(data2)
@@ -133,9 +116,7 @@ dim(data7)
 dim(data8)
 dim(data9)
 dim(data10)
-dim(data11)
-dim(data12)
-data<-merge(data1,y=c(data2,data3,data4,data5,data6,data7,data8,data9,data10,data11,data12))
+data<-merge(data1,y=c(data3,data4,data5,data7,data8,data9,data10))
 dim(data)
 gc()
 #---------------------------------------------------------------------------
@@ -160,74 +141,71 @@ dim(data)
 data <- RunPCA(data, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
+break 
+saveRDS(data,file = 'save_file1.rda')
+data<-readRDS('save_file1.rda')
+break
 data <- FindNeighbors(data, dims = 1:15)
-data <- FindClusters(data, resolution = 0.03)
+data <- FindClusters(data, resolution = 0.05)
 data <- RunUMAP(data, dims = 1:15)
 data <-JoinLayers(data)
-data@meta.data
+head(data@meta.data)
+#-----For gene searches and labeling -------------------------------------------
+DimPlot(data,
+         reduction = 'umap',
+         label=TRUE,
+         label.size = 6,
+         repel = TRUE,
+         label.box = FALSE,
+         raster=FALSE,
+         pt.size = 0.5,
+         seed=1,
+         cols.highlight = c('grey'),
+         dims = c(1,2),
+         group.by = 'cell_types')#,
+         #cols = c('skyblue','yellow','red','blue','orange','green','brown','grey'))
+DimPlot(data,
+        label = TRUE,
+        label.size = 6)
+VlnPlot(data,features = c('OLIG1','OLIG2','SOX2','SOX9','MOG',
+                                 'GFAP','S100B','SLC1A2',
+                                 'RBFOX3','NEUROD2','CALM1',
+                                 'AGBL4','PTPRD','MSR1','TCF4'))
+Idents(data)
+new_idents<-c('excitatory_neurons2','inhibitory_neurons','early_neurons','excitatory_neurons1','opc',
+              'oligodendrocytes','bipolar_neurons','mature_neurons','microglia',
+              'astrocytes')
+wtf<-FindMarkers(data,
+                 ident.1 = '0',
+                 #ident.2 = 'microglia', 
+                 #features = c(),
+                 logfc.threshold=0,
+                 only.pos = TRUE,
+                 test.use = 'bimod',
+                 min.pct = 0.5)
+cat(row.names(wtf))
+VlnPlot(data,features = c(row.names(wtf))[12:24])
+#-------------------------------------------------------------------------------
+names(new_idents) <- levels(data)
+data <- RenameIdents(data, new_idents)
+levels(data)
+table(Idents(data))
+Idents(data)
+head(data@meta.data)
+data@meta.data$cell_types<-Idents(data)
+head(data@meta.data)
+break 
+saveRDS(data,file = 'save_file2.rda')
+data<-readRDS('save_file2.rda')
 break
-#DimPlot(data,
-#        reduction = 'umap',
-#        label=TRUE,
-#        label.size = 6,
-#        repel = TRUE,
-#        label.box = FALSE,
-#        raster=FALSE,
-#        pt.size = 0.5,
-#        seed=1,
-#        cols.highlight = c('grey'),
-#        dims = c(1,2),
-#        group.by = 'seurat_clusters')
-#VlnPlot(data,features = c('OLIG2','SOX2','SOX9','SOX10','RORA','MOG','VIM',
-#                                 'GFAP','S100B','SLC1A2','SLC1A3',
-#                                 'MAP2','DIO2','RBFOX3','NOTCH1','NEUROD2','NEUROD6',
-#                                 'PAX6','NOTCH1','PTPRC','MSR1','ITGAX','TRAC','NCAM1'))
-data_subset<-subset(data,ident=c(0,1,2,3,4,5,6,7,8,9))
-Idents(data_subset)
-new_idents<-c('precursor3','mid_neuron','early_neuron','precursor1','precursor2','late_neuron','early_astrocytes','oligodendrocytes','astrocytes','microglia')
-names(new_idents) <- levels(data_subset)
-data_subset <- RenameIdents(data_subset, new_idents)
-levels(data_subset)
-table(Idents(data_subset))
-data_subset@meta.data$cell_type<-Idents(data_subset)
-data_subset@meta.data
-p1<-DimPlot(data_subset,
-        reduction = 'umap',
-        label=TRUE,
-        label.size = 5,
-        repel = TRUE,
-        label.box = FALSE,
-        raster=FALSE,
-        pt.size = 0.5,
-        seed=1,
-        cols.highlight = c('grey'),
-        cols = c('skyblue','blue','green','yellow','orange','red',
-                 'grey','purple','brown','black','darkblue','darkgreen'),
-        dims = c(1,2),
-        group.by = 'orig.ident')
-#p1
-#p2<-DimPlot(data_subset,
-#            reduction = 'umap',
-#            label=TRUE,
-#            label.size = 6,
-#            repel = TRUE,
-#            label.box = FALSE,
-#            raster=FALSE,
-#            pt.size = 0.5,
-#            seed=1,
-#            cols.highlight = c('grey'),
-#            dims = c(1,2),
-#            group.by = 'cell_type')
-#p3<-VlnPlot(data_subset,features = c('OLIG2','SOX2','SOX9','SOX10','RORA','MOG','VIM',
-#                                     'GFAP','S100B','SLC1A2','SLC1A3',
-#                                     'MAP2','DIO2','RBFOX3','NOTCH1','NEUROD2',
-#                                     'PTPRC','MSR1','ITGAX','NCAM1'))
-#p2+p3
-#p2+p1
-Idents(data_subset)<-data_subset@meta.data$orig.ident
-Idents(data_subset)
-#----------identify clusters next 
-cds <- as.cell_data_set(data_subset)
+#----switch active ident to time course
+table(data@active.ident)
+head(Idents(data))
+Idents(data)<-data@meta.data$orig.ident
+table(data@active.ident)
+head(Idents(data))
+#-------make cell data set
+cds <- as.cell_data_set(data)
 cds
 head(colData(cds))
 #----Edit partitions layer
@@ -235,35 +213,47 @@ cds@clusters@listData$UMAP$partitions
 names(cds@clusters@listData$UMAP$partitions) <- cds@colData@rownames
 cds
 cds@clusters@listData
-cds@clusters@listData$UMAP$clusters<-data_subset@active.ident
+data@active.ident<-data@active.ident
+cds@clusters@listData$UMAP$clusters<-data@active.ident
+#----learn trajectory
 cds<-learn_graph(cds,
                  use_partition = TRUE)
 head(clusters(cds))
 table(clusters(cds))
+#----order cells from initial starting point
 cds <- order_cells(cds, reduction_method = "UMAP",
-                   root_cells = colnames(cds[,clusters(cds)=='cortical_plate_17wks']))
-p3<-plot_cells(cds,
-               reduction_method = c('UMAP'),
-               show_trajectory_graph = TRUE,
-               trajectory_graph_color = 'red',
-               group_label_size = 10,
-               cell_size = 1,
-               color_cells_by = c('pseudotime'))
-p4<-DimPlot(data_subset,
-            reduction = 'umap',
-            label=TRUE,
-            label.size = 5,
-            repel = TRUE,
-            label.box = FALSE,
-            raster=FALSE,
-            pt.size = 1,
-            seed=1,
-            cols.highlight = c('grey'),
-            dims = c(1,2),
-            cols = c('skyblue','blue','green','yellow','orange','red',
-                     'grey','purple','brown','black','darkblue','darkgreen'))
-p3+p4
-rowData(cds)$gene_short_name<-row.names(rowData(cds))
+                   root_cells = colnames(cds[,clusters(cds)=='17wks']))
+#-----plots
+plot_cells(cds,reduction_method = c('UMAP'),
+           show_trajectory_graph = TRUE,
+           trajectory_graph_color = 'red',
+           group_label_size = 10,cell_size = 1,
+           color_cells_by = c('pseudotime'))
+DoHeatmap(
+  data,
+  features = c('OLIG1','OLIG2','SOX2','SOX9','MOG',
+               'GFAP','S100B','SLC1A2',
+               'RBFOX3','NEUROD2','CALM1',
+               'AGBL4','PTPRD','MSR1','TCF4'),
+  cells = NULL,
+  group.by = "cell_types",
+  group.bar = TRUE,
+  group.colors = NULL,
+  disp.min = -2.5,
+  disp.max = NULL,
+  slot = "scale.data",
+  assay = NULL,
+  label = TRUE,
+  size = 5.5,
+  hjust = 0,
+  vjust = 0,
+  angle = 45,
+  raster = TRUE,
+  draw.lines = TRUE,
+  lines.width = NULL,
+  group.bar.height = 0.02,
+  combine = TRUE
+)
 cds$monocle3_pseudotime <- pseudotime(cds)
 cds_3d <- reduce_dimension(cds, max_components = 3)
 cds_3d <- cluster_cells(cds_3d)
@@ -288,7 +278,7 @@ plot_cells_3d(
   cds_3d,
   dims = c(1, 2, 3),
   reduction_method = c("UMAP", "tSNE", "PCA", "LSI", "Aligned"),
-  color_cells_by = "cell_type",
+  color_cells_by = "cell_types",
   genes = NULL,
   show_trajectory_graph = FALSE,
   trajectory_graph_color = "red",
@@ -316,33 +306,118 @@ plot_cells_3d(
   min_expr = 0.1
 )
 break
-saveRDS(cds_3d,file = 'cds_human_neural_develop.rda')
-saveRDS(data_subset,file = 'seurat_human_neural_develop.rda')
-p3<-VlnPlot(data_subset,features = c('OLIG2','SOX9','RORA','MOG','VIM',
-                          'GFAP','S100B','SLC1A2','SLC1A3',
-                          'MAP2','DIO2','RBFOX3','NOTCH1','NCAM1'))
-p1+p2+p3
-wtf<-FindMarkers(data_subset,
-                 ident.1 = '3',
-                 ident.2 = 'microglia', 
-                 #features = c(),
-                 logfc.threshold=1,
-                 only.pos = TRUE,
-                 test.use = 'bimod',
-                 min.pct = 0.5)
-cat(row.names(wtf))
-VlnPlot(data_subset,features = c(row.names(wtf))[13:24])
-break 
-cds_3D<-readRDS('/home/em_b/Downloads/GSE217511_RAW/cortical_plate_17wks.rda')
+saveRDS(cds_3d,file = 'cds_3d.rda')
+saveRDS(cds,file = 'cds.rda')
 break 
 #-----fit model statistics 
-gene_fits<-fit_models(cds,model_formula_str = '~pseudotime')
+#-----This takes awhile
+gene_fits<-fit_models(cds,
+                      model_formula_str = '~pseudotime')
+gc()
 head(gene_fits)
 #----fit_coefs show genes which vary as a function of time
 fit_coefs<-coefficient_table(gene_fits)
 fit_coefs <- fit_coefs %>% filter(term == 'pseudotime')
 fit_coefs<-subset(fit_coefs,q_value< 0.05)
 fit_coefs<-fit_coefs[,c(2,6,7,13)]
+summary(fit_coefs)
+fit_coefs<-fit_coefs[order(fit_coefs$estimate, decreasing=FALSE),]
+fit_coefs<-fit_coefs[!grepl('LINC',fit_coefs$gene_id),]
+fit_coefs<-fit_coefs[!grepl('AC0',fit_coefs$gene_id),]
+fit_coefs<-fit_coefs[!grepl('AP0',fit_coefs$gene_id),]
+fit_coefs<-fit_coefs[!grepl('AJ0',fit_coefs$gene_id),]
+fit_coefs<-fit_coefs[!grepl('.1',fit_coefs$gene_id),]
+fit_coefs<-fit_coefs[!grepl('.2',fit_coefs$gene_id),]
+break 
+write.csv(fit_coefs,file = 'pseudotime_gene_fits.csv')
+library(Seurat)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggridges)
+library(biomaRt)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(DESeq2)
+library(SeuratWrappers)
+library(monocle3)
+setwd('/home/em_b/work_stuff/human_develop_timecourse/GSE217511_RAW')
+data<-readRDS('save_file2.rda')
+fit_coefs<-read.csv('pseudotime_gene_fits.csv')
+cds<-readRDS('cds.rda')
+break
+#------plot genes by pseudotime
+plot(fit_coefs$estimate ~ num(1:3977),
+     bty='n',
+     ylab='pseudotime',
+     xlab='genes',
+     main='Genes_ordered_by_pseudotime')
+abline(lm(fit_coefs$estimate ~ num(1:3977)), col='blue')
+text(fit_coefs$estimate,
+     fit_coefs$gene_id,
+     pos=4,
+     offset = 2,
+     cex=0.7,
+     col = 'red')
+#-------------------------------------------------------------------------------
+DoHeatmap(
+  data,
+  features = c('FOXN4','MKI67','SQLE','LYPD6B','SHISA7','TMX3','SLITRK4',
+               'ITGB4','ZNF98'),
+  cells = NULL,
+  group.by = "cell_types",
+  group.bar = TRUE,
+  group.colors = NULL,
+  disp.min = -2.5,
+  disp.max = NULL,
+  slot = "scale.data",
+  assay = NULL,
+  label = TRUE,
+  size = 5.5,
+  hjust = 0,
+  vjust = 0,
+  angle = 45,
+  raster = TRUE,
+  draw.lines = TRUE,
+  lines.width = NULL,
+  group.bar.height = 0.02,
+  combine = TRUE
+)
+#----stop here
+break 
+#-----subset and graph gene by pseudotime
+cds_subset<-cds[row.names(subset(rowData(cds),
+                                 row.names(rowData(cds))%in%c('FOXN4','MKI67','SQLE','LYPD6B','SHISA7','TMX3','SLITRK4',
+                                                              'ITGB4','ZNF98'))),]
+cds_subset
+colData(cds_subset)$pseudotime<-pseudotime(cds_subset,reduction_method = 'UMAP')
+colData(cds_subset)
+plot_genes_violin(cds_subset,
+                  group_cells_by="monocle3_pseudotime",
+                  ncol=3,
+                  label_by_short_name = FALSE,
+                  normalize = FALSE,
+                  log_scale = FALSE)
+#----plot histogram of pseudotime vs gene names
+head(row.names(rowData(cds)))
+rowData(cds)$gene_short_name<-row.names(rowData(cds))
+rowData(cds)
+plot_genes_in_pseudotime(cds, color_cells_by="monocle3_pseudotime")
+plot_genes_in_pseudotime(cds_subset,
+                         min_expr = NULL,
+                         cell_size = 0.75,
+                         nrow = NULL,
+                         ncol = 1,
+                         panel_order = NULL,
+                         color_cells_by = "pseudotime",
+                         trend_formula = "~ splines::ns(pseudotime, df=3)",
+                         label_by_short_name = TRUE,
+                         vertical_jitter = NULL,
+                         horizontal_jitter = NULL)
+
+break
+write.csv(fit_coefs,file = 'pseudotime_gene_fits.csv')
+break
 #-------------------------------------------------------------------------------
 #-----principal graph test 
 cds_pr_test<-graph_test(cds,neighbor_graph = 'principal_graph',cores = 4)
@@ -400,4 +475,3 @@ VlnPlot(data_subset, features = c('MARCKS','CLU','S100B','MT3','TUBB2B','PLP1',
 #           cell_size = 1)
 break 
 VlnPlot(data_subset,features = c('SPARC','OLIG2','MOG','MSX3','MSX1'))
-
