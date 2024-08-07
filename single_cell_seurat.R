@@ -6,13 +6,17 @@ library(ggridges)
 library(biomaRt)
 library(clusterProfiler)
 library(org.Hs.eg.db)
+library(DESeq2)
+library(SeuratWrappers)
+library(monocle3)
+library(plotly)
 cat('GSE234832. Patient-derived brain metastasis models')
 setwd('/home/em_b/work_stuff/brain_metastasis/GSE234832_RAW')
 barcodes_path <- 'GSM7475327_LUBMET7.barcodes.tsv.gz'
 features_path <- 'GSM7475327_LUBMET7.features.tsv.gz'
 matrix_path <- 'GSM7475327_LUBMET7.matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-data <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'lung_cancer')
+data1 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'lung_cancer')
 #---------------------------------------------------------------------------
 setwd('/home/em_b/work_stuff/brain_metastasis/GSE234832_RAW')
 barcodes_path <- 'GSM7475328_LUBMET1.barcodes.tsv.gz'
@@ -20,8 +24,8 @@ features_path <- 'GSM7475328_LUBMET1.features.tsv.gz'
 matrix_path <- 'GSM7475328_LUBMET1.matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
 data2 <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'lung_cancer')
-data<-merge(data,data2)
-table(data@active.ident)
+data<-merge(data1,data2)
+table(data2@active.ident)
 data[["percent.mt"]] <- PercentageFeatureSet(data, pattern = "^MT-")
 VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
 data <- subset(data, subset = nFeature_RNA > 200 & nFeature_RNA < 7500 & percent.mt <10)
@@ -31,15 +35,13 @@ data <- NormalizeData(data)
 data <- FindVariableFeatures(data, selection.method = "vst", nfeatures = 2000)
 VariableFeatures(data)
 top1000 <- head(VariableFeatures(data), 1000)
-top1000
+head(top1000)
 gc()
 plot1 <- VariableFeaturePlot(data)
 plot1
 all.genes <- rownames(data)
-all.genes
-gc()
+head(all.genes)
 data <- ScaleData(data, features = all.genes)
-gc()
 dim(data)
 data <- RunPCA(data, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
@@ -59,79 +61,31 @@ DimPlot(data,
         seed=1,
         cols.highlight = c('grey'),
         dims = c(1,2))
-break 
-FindMarkers(data,
-            ident.1 = '7',
-            ident.2 = '5',
-            logfc.threshold=0,
-            only.pos = TRUE,
-            test.use='bimod')
-#---tester
-VlnPlot(data, features = c('ULK1', 'ATG13', 'FIP200', 'ATG101', 'ATG9A'),cols = c())
-
 #-------------------------------------------------------------------------------
-#---cluster 5 T-cells
-VlnPlot(data, features = c('PTPRC','TRAC','TRBC1','CD3D','CD3E','CD8A','RORA'),cols = c())
-
-#----cluster 2/8 Type II macro/microglial
-VlnPlot(data,
-        features = c('PTPRC','CD14','MRC1','MILR1','CD163',
-                     'LYZ','CD86','CD68','FCGR3A','ITGAM',
-                     'ITGAX','CSF1R'))
-
-#----clusters 4,6,9 oligodendrocytes and astrocytes
-VlnPlot(data,
-        features = c('NCAM1','OLIG1','OLIG2','SOX8','SOX9','SOX10','FGFR2',
-                     'FGF1','LAMP2','GFAP','S100B','NDRG2','SLC1A3'))
-
-#---cluster 10 Fibroblasts
-VlnPlot(data, features = c('COL1A1','COL6A1','COL1A2','COL4A1','FN1','IGFBP7','TIMP3'),cols = c())
-
-#---cluster 0,1,3,7 
-VlnPlot(data, features = c('EPCAM','CD24','SOX17'),cols = c())
-
-#----cytokines
-VlnPlot(data, features = c('IL1B','IL2RG','IL6R','IL6ST','CXCL8',
-                           'IL10RA','IL18','IL32','TNF','TNFAIP3',
-                           'TNFSF10','TGFB1','CSF1','CSF1R'),cols = c())
-new_idents<-c('tumor','tumor','M2mac','tumor','OPC','T_cells','OPC','tumor','M1macro','OPC','FB')
-names(new_idents) <- levels(data)
-data <- RenameIdents(data, new_idents)
-levels(data)
-break 
-#-------------------------------------------
-markers<-FindMarkers(data,
-            ident.1 = '7',
-            ident.2 = '5',
-            logfc.threshold=0,
-            only.pos = TRUE,
-            test.use='bimod')
-#-----Define the clusters 
-Sys.setenv("http_proxy"="http://my.proxy.org:9999")
-ensembl=useMart("ensembl")
-ensembl=useDataset("hsapiens_gene_ensembl",
-                   mart = ensembl)
-geneid <- row.names(markers)
-head(geneid)
-genes <-getBM(attributes = c('external_gene_name','entrezgene_id'),
-              filters = 'external_gene_name',
-              values = geneid,
-              mart = ensembl)
-go <- enrichGO(gene = genes$entrezgene_id,
-               OrgDb = org.Hs.eg.db,
-               ont = "BP")
-go1<-data.frame(go)
-go1<-go1[order(go1$Count, decreasing=TRUE),]
-#-----------------------------------------------------------------------
-GO_search<-select(org.Hs.eg.db,
-                               keytype = 'GOALL',
-                               keys = 'GO:0198738',
-                               columns = c('SYMBOL','GENENAME','ENTREZID'))
-list<-GO_search$SYMBOL
-list
+data_subset<-subset(data,ident=c(4,6,9))
+data_subset <- FindNeighbors(data_subset, dims = 1:15)
+data_subset <- FindClusters(data_subset, resolution = 0.7)
+data_subset <- RunUMAP(data_subset, dims = 1:15)
+new_idents<-c('OPC','intermediates','reactive_OPC','oligodendrocytes','astrocytes')
+names(new_idents) <- levels(data_subset)
+data_subset <- RenameIdents(data_subset, new_idents)
+levels(data_subset)
+data_subset@meta.data$cell_types<-Idents(data_subset)
+table(data_subset@meta.data$cell_types)
+DimPlot(data_subset,
+        reduction = 'umap',
+        label=TRUE,
+        label.size = 6,
+        repel = TRUE,
+        label.box = FALSE,
+        raster=FALSE,
+        pt.size = 1,
+        seed=1,
+        cols.highlight = c('grey'),
+        dims = c(1,2))
 DoHeatmap(
-  data,
-  features = list,
+  data_subset,
+  features = c('GFAP','S100B','SLC1A3','IL6ST','OLIG2','ZNF488','MOG','VIM','CD44','LAMP2'),
   cells = NULL,
   group.by = "ident",
   group.bar = TRUE,
@@ -151,7 +105,61 @@ DoHeatmap(
   group.bar.height = 0.02,
   combine = TRUE
 )
-
+#-------------------------------
+break 
+require('Seurat.utils')
+data3d <- data_subset
+data3d <- RunUMAP(data3d,dims = 1:15,n.components = 3L)
+head(Embeddings(data3d,reduction = "umap"))
+plot3d1 <- FetchData(data3d, vars = c("umap_1", "umap_2", "umap_3", "cell_types"))
+plot3d1$label <- paste(rownames(plot3d1))
+fig <- plot_ly(data = plot3d1, 
+               x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+               color = ~cell_types, 
+               colors = c("lightseagreen",
+                          "gray50",
+                          "darkgreen",
+                          "red4",
+                          "red",
+                          "turquoise4",
+                          "black",
+                          "yellow4",
+                          "royalblue1",
+                          "lightcyan3",
+                          "peachpuff3",
+                          "khaki3",
+                          "gray20",
+                          "orange2",
+                          "royalblue4",
+                          "yellow3",
+                          "gray80",
+                          "darkorchid1",
+                          "lawngreen",
+                          "plum2",
+                          "darkmagenta"),
+               type = "scatter3d", 
+               mode = "markers", 
+               marker = list(size = 5, width=2),
+               text=~label,
+               hoverinfo="text")
+fig
+goi <- "GFAP"
+plotting.data <- FetchData(data3d, vars = c("umap_1", "umap_2", "umap_3", "Expression"=goi), slot = 'data')
+Cutoff <- quantile(plotting.data[,goi], probs = .95)
+plotting.data$"ExprCutoff" <- ifelse(test = plotting.data[,goi] <Cutoff, yes = plotting.data[,goi], no = Cutoff)
+plotting.data$label <- paste(rownames(plotting.data)," - ", plotting.data[,goi], sep="")
+plot_ly(data = plotting.data,
+        name = goi,
+        x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+        color = ~ExprCutoff, # you can just run this against the column for the gene as well using ~ACTB, the algorith will automatically scale in that case based on maximal and minimal values
+        opacity = .5,
+        colors = c('darkgrey', 'red'), 
+        type = "scatter3d", 
+        mode = "markers",
+        marker = list(size = 5), 
+        text=~label,
+        hoverinfo="text"
+) %>%layout(title=goi)
 #-----If subsetting use
 #----------Isolate CD45+  -------------------------------------
 data$CD45.groups <- 'CD45.pos'
