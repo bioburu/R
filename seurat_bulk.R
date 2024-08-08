@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(ggridges)
 library(plotly)
+library(htmlwidgets)
 setwd('/home/em_b/work_stuff/differentiation_bulkrna')
 matrix<-read.csv('rnaseq_bulk_0hr_48hr_48t3.csv')
 row.names(matrix)<-make.names(matrix$external_gene_name,
@@ -64,7 +65,7 @@ fig <- plot_ly(data = data3d,
                           "darkmagenta"),
                type = "scatter3d", 
                mode = "markers", 
-               marker = list(size = 20, width=5),
+               marker = list(size = 10, width=5),
                text=~label,
                hoverinfo="text")
 #----------------------------------------------------
@@ -78,7 +79,7 @@ fig2 <- plot_ly(data = data3d,
                colors = c(),
                type = "scatter3d", 
                mode = "markers", 
-               marker = list(size = 20, width=5),
+               marker = list(size = 10, width=5),
                text=data3d$label,
                hoverinfo="text")%>%layout(title='Neurod1')
 #----------------------------------------------------
@@ -92,30 +93,81 @@ fig3 <- plot_ly(data = data3d,
                 colors = c(),
                 type = "scatter3d", 
                 mode = "markers", 
-                marker = list(size = 20, width=5),
+                marker = list(size = 10, width=5),
                 text=data3d$label,
                 hoverinfo="text")%>%layout(title='Gli2')
 #----------------------------------------------------
 df<-data.frame(t(data@assays$RNA$counts))
-df$Klf9
-data3d2<-cbind(df$Klf9,data3d)
-Klf9<-data3d2$`df$Klf9`
+df$Hr
+data3d2<-cbind(df$Hr,data3d)
+Hr<-data3d2$`df$Hr`
 fig4 <- plot_ly(data = data3d, 
                 x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-                color = ~Klf9, 
+                color = ~Hr, 
                 colors = c(),
                 type = "scatter3d", 
                 mode = "markers", 
-                marker = list(size = 20, width=5),
+                marker = list(size = 10, width=5),
                 text=data3d$label,
-                hoverinfo="text")%>%layout(title='Klf9')
+                hoverinfo="text")%>%layout(title='Hr')
+#----------------------------------------------------
+df<-data.frame(t(data@assays$RNA$counts))
+df$Cntn2
+data3d2<-cbind(df$Cntn2,data3d)
+Cntn2<-data3d2$`df$Cntn2`
+fig5 <- plot_ly(data = data3d, 
+                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+                color = ~Cntn2, 
+                colors = c(),
+                type = "scatter3d", 
+                mode = "markers", 
+                marker = list(size = 10, width=5),
+                text=data3d$label,
+                hoverinfo="text")%>%layout(title='Cntn2')
+#----------------------------------------------------
+df<-data.frame(t(data@assays$RNA$counts))
+df$Rora
+data3d2<-cbind(df$Rora,data3d)
+Rora<-data3d2$`df$Rora`
+fig6 <- plot_ly(data = data3d, 
+                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+                color = ~Rora, 
+                colors = c(),
+                type = "scatter3d", 
+                mode = "markers", 
+                marker = list(size = 10, width=5),
+                text=data3d$label,
+                hoverinfo="text")%>%layout(title='Rora')
+#----------------------------------------------------
+df<-data.frame(t(data@assays$RNA$counts))
+df$Gli1
+data3d2<-cbind(df$Gli1,data3d)
+Gli1<-data3d2$`df$Gli1`
+fig7 <- plot_ly(data = data3d, 
+                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+                color = ~Gli1, 
+                colors = c(),
+                type = "scatter3d", 
+                mode = "markers", 
+                marker = list(size = 10, width=5),
+                text=data3d$label,
+                hoverinfo="text")%>%layout(title='Gli1')
+
+
+
 break
 fig
 fig2
 fig3
 fig4
-library(htmlwidgets)
-saveWidget(ggplotly(fig4), file = "Klf9.html")
+fig5
+fig6
+fig7
+p <- plotly_build(fig1)
+p$x$data[[3]]$marker$symbol <- 'diamond'
+p$x$data[[6]]$marker$symbol <- 'diamond'
+p
+saveWidget(ggplotly(fig7), file = "Gli1.html")
 break 
 #-----correlations
 FeatureScatter(data,
@@ -140,7 +192,7 @@ DimPlot(data,
         dims = c(14,9))
 #-----------PCA features
 TopFeatures(data[['pca']],
-            dim = 3,
+            dim = 9,
             balanced = TRUE)
 #------ridgeplot
 RidgePlot(data,
