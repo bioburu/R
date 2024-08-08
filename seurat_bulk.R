@@ -3,97 +3,154 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(ggridges)
-library(caTools)
-#library(caret)
-#library(InformationValue)
-#library(pROC)
-#library(ROCR)
-library(readxl)
-setwd('/home/em_b/work_stuff/FCCC/T3_RNAseq/')
-matrix<-read.csv('biomart.mm39.csv')
-row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
-matrix<-matrix[,-c(1)]
-matrix<-round(matrix)
-data <- CreateSeuratObject(counts=matrix,project = 'hg38')
+library(plotly)
+setwd('/home/em_b/work_stuff/differentiation_bulkrna')
+matrix<-read.csv('rnaseq_bulk_0hr_48hr_48t3.csv')
+row.names(matrix)<-make.names(matrix$external_gene_name,
+                              unique = TRUE)
+matrix2<-matrix[,-c(1:2)]
+matrix2<-round(matrix2)
+data <- CreateSeuratObject(counts=matrix2,project = 'MB_GNP.T3')
 gc()
-data@active.ident
 table(data@active.ident)
 VlnPlot(data, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
 FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + geom_smooth()
 data <- NormalizeData(data)
 data <- FindVariableFeatures(data, selection.method = "vst", nfeatures = 2000)
-VariableFeatures(data)
+head(VariableFeatures(data))
 top1000 <- head(VariableFeatures(data), 1000)
-top1000
+head(top1000)
 gc()
 plot1 <- VariableFeaturePlot(data)
 plot1
 all.genes <- rownames(data)
-all.genes
+length(all.genes)
 gc()
 data <- ScaleData(data, features = all.genes)
-gc()
 dim(data)
-data <- RunPCA(data,npcs = 11, features = VariableFeatures(object = data))
-DimHeatmap(data, dims = 1:11, cells = 500, balanced = T)
+data <- RunPCA(data,npcs = 17, features = VariableFeatures(object = data))
+DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
-gc()
 table(data@meta.data$orig.ident)
+#data <-JoinLayers(data)
+data3d<-data.frame(data@reductions$pca@cell.embeddings)
+str(data3d)
+#plot3d <- FetchData(data3d, vars = c("PC_1", "PC_2", "PC_3", row.names()))
+data3d$label <- paste(rownames(data3d))
+data3d$label <-gsub("\\_.*","",data3d$label)
+fig <- plot_ly(data = data3d, 
+               x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+               color = ~label, 
+               colors = c("lightseagreen",
+                          "gray50",
+                          "darkgreen",
+                          "red4",
+                          "red",
+                          "turquoise4",
+                          "black",
+                          "yellow4",
+                          "royalblue1",
+                          "lightcyan3",
+                          "peachpuff3",
+                          "khaki3",
+                          "gray20",
+                          "orange2",
+                          "royalblue4",
+                          "yellow3",
+                          "gray80",
+                          "darkorchid1",
+                          "lawngreen",
+                          "plum2",
+                          "darkmagenta"),
+               type = "scatter3d", 
+               mode = "markers", 
+               marker = list(size = 20, width=5),
+               text=~label,
+               hoverinfo="text")
+#----------------------------------------------------
+df<-data.frame(t(data@assays$RNA$counts))
+df$Neurod1
+data3d2<-cbind(df$Neurod1,data3d)
+Neurod1<-data3d2$`df$Neurod1`
+fig2 <- plot_ly(data = data3d, 
+               x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+               color = ~Neurod1, 
+               colors = c(),
+               type = "scatter3d", 
+               mode = "markers", 
+               marker = list(size = 20, width=5),
+               text=data3d$label,
+               hoverinfo="text")%>%layout(title='Neurod1')
+#----------------------------------------------------
+df<-data.frame(t(data@assays$RNA$counts))
+df$Gli2
+data3d2<-cbind(df$Gli2,data3d)
+Gli2<-data3d2$`df$Gli2`
+fig3 <- plot_ly(data = data3d, 
+                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+                color = ~Gli2, 
+                colors = c(),
+                type = "scatter3d", 
+                mode = "markers", 
+                marker = list(size = 20, width=5),
+                text=data3d$label,
+                hoverinfo="text")%>%layout(title='Gli2')
+#----------------------------------------------------
+df<-data.frame(t(data@assays$RNA$counts))
+df$Klf9
+data3d2<-cbind(df$Klf9,data3d)
+Klf9<-data3d2$`df$Klf9`
+fig4 <- plot_ly(data = data3d, 
+                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
+                color = ~Klf9, 
+                colors = c(),
+                type = "scatter3d", 
+                mode = "markers", 
+                marker = list(size = 20, width=5),
+                text=data3d$label,
+                hoverinfo="text")%>%layout(title='Klf9')
+break
+fig
+fig2
+fig3
+fig4
+library(htmlwidgets)
+saveWidget(ggplotly(fig4), file = "Klf9.html")
+break 
 #-----correlations
 FeatureScatter(data,
-               feature1 = "NEUROD1",
-               feature2 = 'EZH2',
+               feature1 = "Neurod1",
+               feature2 = 'Ezh2',
                cols = c(),
                pt.size = 5,
                shuffle = TRUE,
                seed = 1,
                jitter = TRUE)
 VlnPlot(data,
-            features = c('NEUROD1','EZH2'),
+        features = c(),
         pt.size = 1,
         cols = c('grey','red',
                  'grey','red'),
         layer='counts')
 
 DimPlot(data,
-        cols = c('grey','red',
-                 'grey','red'),
+        cols = c('grey','black','red',
+                 'grey','black','red'),
         pt.size = 7,
-        dims = c(3,6))
+        dims = c(14,9))
 #-----------PCA features
 TopFeatures(data[['pca']],
             dim = 3,
             balanced = TRUE)
 #------ridgeplot
 RidgePlot(data,
-          features = c("HR","KLF9"),
-          cols = c('grey','red','grey','red'))
-#------------------------------------------------
-break
-FindMarkers(data,
-            ident.1 = 'SHH.T3',
-            ident.2 = 'SHH.PBS', 
-            features = c('NEUROD1','CNTN2','MAP1A','RBFOX3',
-                         'FYN','RELN',
-                         'PPP2R5B','TRIM67','CNR1','KIDINS220',
-                         'DPYSL3','RIMS1','ATP8A2','MAPT',
-                         'APBB1','SS18L1','RUFY3',
-                         'NDRG4','FKBP1B','NEUROD2','MAP1B'),
-            logfc.threshold=0,
-            only.pos = FALSE,
-            test.use = 'negbinom',
-            min.pct = 0.1)
+          features = c(),
+          cols = c())
 #------------------------------------------
 x<-FindMarkers(data, ident.1 = 'GBM', ident.2 = 'NSC', 
                features = c(top1000),logfc.threshold=2,
                only.pos = FALSE,test.use = 'DESeq2',min.pct = 0.5)
-VlnPlot(data,features = c(rownames(x)[1:12]),cols = c('grey','red','grey','red'))
-VlnPlot(data,features = c(rownames(x)[37:48]),cols = c('grey','red','grey','red'))
-
-VlnPlot(data,features = c('NEUROD1','SCG2','PMP2','GFAP','MLC1','TIMP4',
-                          'NOTCH1','PROM1','THRA','THRB','DIO2','DIO3','NCAM1','FOXO1','FOXG1','MKI67'),cols = c('grey','red','grey','red'))
-FindMarkers(data, ident.1 = 'GBM', ident.2 = 'NSC', features = c('NEUROD1','SCG2','PMP2','GFAP','MLC1','TIMP4',
-                                                                 'NOTCH1','PROM1','THRA','THRB','DIO2','DIO3','NCAM1','FOXO1','FOXG1','MKI67'),test.use = 'negbinom')
+VlnPlot(data,features = c(rownames(x)[1:12]),cols = c())
 x<-subset(x,p_val_adj< 0.01)
 downreg<-subset(x,avg_log2FC< -1.5)
 upreg<-subset(x,avg_log2FC> 1.5)
