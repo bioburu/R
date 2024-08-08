@@ -5,6 +5,8 @@ library(ggplot2)
 library(ggridges)
 library(plotly)
 library(htmlwidgets)
+library(DESeq2)
+library(volcano3D)
 setwd('/home/em_b/work_stuff/differentiation_bulkrna')
 matrix<-read.csv('rnaseq_bulk_0hr_48hr_48t3.csv')
 row.names(matrix)<-make.names(matrix$external_gene_name,
@@ -33,10 +35,123 @@ data <- RunPCA(data,npcs = 17, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 table(data@meta.data$orig.ident)
-#data <-JoinLayers(data)
+#------3d volcancos
+gnps<-matrix2[,c(1:9)]
+head(gnps)
+names<-colnames(gnps)
+names
+condition<-c('GNP.0hr','GNP.0hr','GNP.0hr',
+             'GNP.48hr','GNP.48hr','GNP.48hr',
+             'GNP.48hr.T3','GNP.48hr.T3','GNP.48hr.T3')
+type<-c('paired','paired','paired',
+        'paired','paired','paired',
+        'paired','paired','paired')
+coldata<-data.frame(cbind(names,condition,type))
+coldata
+row.names(coldata)<-make.names(coldata$names,
+                               unique=TRUE)
+coldata<-coldata[,-1]
+coldata
+colnames(gnps)
+row.names(coldata)
+
+deseq<-DESeqDataSetFromMatrix(countData = gnps,
+                              colData = coldata,
+                              design = ~ condition)
+deseq
+DE<-DESeq(deseq)
+DE
+LRT<-DESeq(deseq,
+           test = c('LRT'),
+           reduced = ~ 1,
+           parallel = TRUE)
+res<-deseq_polar(DE,LRT,'condition')
+str(res)
+vol3d<-volcano3D(
+  res,
+  type = 2,
+  label_rows = c('Neurod1','Gli2','Klf9'),
+  label_size = 14,
+  arrow_length = 120,
+  colour_code_labels = TRUE,
+  label_colour = "black",
+  grid_colour = "grey80",
+  grid_width = 2,
+  grid_options = NULL,
+  axis_colour = "red",
+  axis_width = 2,
+  marker_size = 5,
+  marker_outline_width = 1,
+  marker_outline_colour = "grey",
+  z_axis_title_offset = 1.2,
+  z_axis_title_size = 12,
+  z_axis_angle = 0.5,
+  radial_axis_title_size = 20,
+  radial_axis_title_offset = 1.2,
+  xy_aspectratio = 3,
+  z_aspectratio = 1,
+  camera_eye = list(x = 0.9, y = 0.9, z = 0.9))
+#-----------------
+mbs<-matrix2[,c(10:18)]
+head(mbs)
+names<-colnames(mbs)
+names
+condition<-c('MB.0hr','MB.0hr','MB.0hr',
+             'MB.48hr','MB.48hr','MB.48hr',
+             'MB.48hr.T3','MB.48hr.T3','MB.48hr.T3')
+type<-c('paired','paired','paired',
+        'paired','paired','paired',
+        'paired','paired','paired')
+coldata<-data.frame(cbind(names,condition,type))
+coldata
+row.names(coldata)<-make.names(coldata$names,
+                               unique=TRUE)
+coldata<-coldata[,-1]
+coldata
+colnames(mbs)
+row.names(coldata)
+deseq<-DESeqDataSetFromMatrix(countData = mbs,
+                              colData = coldata,
+                              design = ~ condition)
+deseq
+DE<-DESeq(deseq)
+DE
+LRT<-DESeq(deseq,
+           test = c('LRT'),
+           reduced = ~ 1,
+           parallel = TRUE)
+res<-deseq_polar(DE,LRT,'condition')
+str(res)
+vol3d<-volcano3D(
+  res,
+  type = 2,
+  label_rows = c('Neurod1','Gli2','Klf9'),
+  label_size = 14,
+  arrow_length = 120,
+  colour_code_labels = TRUE,
+  label_colour = "black",
+  grid_colour = "grey80",
+  grid_width = 2,
+  grid_options = NULL,
+  axis_colour = "red",
+  axis_width = 2,
+  marker_size = 5,
+  marker_outline_width = 1,
+  marker_outline_colour = "grey",
+  z_axis_title_offset = 1.2,
+  z_axis_title_size = 12,
+  z_axis_angle = 0.5,
+  radial_axis_title_size = 20,
+  radial_axis_title_offset = 1.2,
+  xy_aspectratio = 3,
+  z_aspectratio = 1,
+  camera_eye = list(x = 0.9, y = 0.9, z = 0.9))
+vol3d
+break 
+#---extract PCAs for plotting
 data3d<-data.frame(data@reductions$pca@cell.embeddings)
 str(data3d)
-#plot3d <- FetchData(data3d, vars = c("PC_1", "PC_2", "PC_3", row.names()))
+head(data3d)
 data3d$label <- paste(rownames(data3d))
 data3d$label <-gsub("\\_.*","",data3d$label)
 fig <- plot_ly(data = data3d, 
@@ -68,94 +183,28 @@ fig <- plot_ly(data = data3d,
                marker = list(size = 10, width=5),
                text=~label,
                hoverinfo="text")
-#----------------------------------------------------
-df<-data.frame(t(data@assays$RNA$counts))
-df$Neurod1
-data3d2<-cbind(df$Neurod1,data3d)
-Neurod1<-data3d2$`df$Neurod1`
+fig
+#-----------PCA features
+TopFeatures(data[['pca']],
+            dim = 1,
+            balanced = TRUE)
+#----------3d plot by gene expressions 
+genes<-data.frame(t(data@assays$RNA$counts))
+list<-c('Neurod1','Gli2','Hr')
+genes<-genes[,c(list)]
+data3d<-cbind(data3d,genes)
 fig2 <- plot_ly(data = data3d, 
-               x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-               color = ~Neurod1, 
+               x = ~Neurod1, y = ~Gli2, z = ~Hr, 
+               color = ~label, 
                colors = c(),
                type = "scatter3d", 
                mode = "markers", 
                marker = list(size = 10, width=5),
                text=data3d$label,
-               hoverinfo="text")%>%layout(title='Neurod1')
-#----------------------------------------------------
-df<-data.frame(t(data@assays$RNA$counts))
-df$Gli2
-data3d2<-cbind(df$Gli2,data3d)
-Gli2<-data3d2$`df$Gli2`
-fig3 <- plot_ly(data = data3d, 
-                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-                color = ~Gli2, 
-                colors = c(),
-                type = "scatter3d", 
-                mode = "markers", 
-                marker = list(size = 10, width=5),
-                text=data3d$label,
-                hoverinfo="text")%>%layout(title='Gli2')
-#----------------------------------------------------
-df<-data.frame(t(data@assays$RNA$counts))
-df$Hr
-data3d2<-cbind(df$Hr,data3d)
-Hr<-data3d2$`df$Hr`
-fig4 <- plot_ly(data = data3d, 
-                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-                color = ~Hr, 
-                colors = c(),
-                type = "scatter3d", 
-                mode = "markers", 
-                marker = list(size = 10, width=5),
-                text=data3d$label,
-                hoverinfo="text")%>%layout(title='Hr')
-#----------------------------------------------------
-df<-data.frame(t(data@assays$RNA$counts))
-df$Cntn2
-data3d2<-cbind(df$Cntn2,data3d)
-Cntn2<-data3d2$`df$Cntn2`
-fig5 <- plot_ly(data = data3d, 
-                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-                color = ~Cntn2, 
-                colors = c(),
-                type = "scatter3d", 
-                mode = "markers", 
-                marker = list(size = 10, width=5),
-                text=data3d$label,
-                hoverinfo="text")%>%layout(title='Cntn2')
-#----------------------------------------------------
-df<-data.frame(t(data@assays$RNA$counts))
-df$Rora
-data3d2<-cbind(df$Rora,data3d)
-Rora<-data3d2$`df$Rora`
-fig6 <- plot_ly(data = data3d, 
-                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-                color = ~Rora, 
-                colors = c(),
-                type = "scatter3d", 
-                mode = "markers", 
-                marker = list(size = 10, width=5),
-                text=data3d$label,
-                hoverinfo="text")%>%layout(title='Rora')
-#----------------------------------------------------
-df<-data.frame(t(data@assays$RNA$counts))
-df$Gli1
-data3d2<-cbind(df$Gli1,data3d)
-Gli1<-data3d2$`df$Gli1`
-fig7 <- plot_ly(data = data3d, 
-                x = ~PC_9, y = ~PC_14, z = ~PC_1, 
-                color = ~Gli1, 
-                colors = c(),
-                type = "scatter3d", 
-                mode = "markers", 
-                marker = list(size = 10, width=5),
-                text=data3d$label,
-                hoverinfo="text")%>%layout(title='Gli1')
-
-
-
-break
+               hoverinfo="text")%>%layout(title='T3_treatments_vs_controls')
+fig2
+break 
+saveWidget(ggplotly(fig2), file = "neurod1.gli1.hr.html")
 fig
 fig2
 fig3
@@ -163,11 +212,14 @@ fig4
 fig5
 fig6
 fig7
+vol3d
+break 
+#---change shape of plot if needed
 p <- plotly_build(fig1)
 p$x$data[[3]]$marker$symbol <- 'diamond'
 p$x$data[[6]]$marker$symbol <- 'diamond'
 p
-saveWidget(ggplotly(fig7), file = "Gli1.html")
+saveWidget(ggplotly(vol3d), file = "mb.3dvol.html")
 break 
 #-----correlations
 FeatureScatter(data,
@@ -190,10 +242,6 @@ DimPlot(data,
                  'grey','black','red'),
         pt.size = 7,
         dims = c(14,9))
-#-----------PCA features
-TopFeatures(data[['pca']],
-            dim = 9,
-            balanced = TRUE)
 #------ridgeplot
 RidgePlot(data,
           features = c(),
@@ -210,4 +258,3 @@ df<-rbind(upreg,downreg)
 df<-cbind(row.names(df),df)
 break
 write.csv(x,file = 'GSE154958_gbm_dura.csv')
-
