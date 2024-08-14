@@ -10,6 +10,7 @@ library(DESeq2)
 library(SeuratWrappers)
 library(monocle3)
 library(plotly)
+library(htmlwidgets)
 cat('GSE234832. Patient-derived brain metastasis models')
 setwd('/home/em_b/work_stuff/brain_metastasis/GSE234832_RAW')
 barcodes_path <- 'GSM7475327_LUBMET7.barcodes.tsv.gz'
@@ -160,6 +161,8 @@ plot_ly(data = plotting.data,
         text=~label,
         hoverinfo="text"
 ) %>%layout(title=goi)
+#--save 3d plots
+saveWidget(ggplotly(fig), file = "name.html")
 #-----If subsetting use
 #----------Isolate CD45+  -------------------------------------
 data$CD45.groups <- 'CD45.pos'
