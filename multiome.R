@@ -5,27 +5,34 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(ggridges)
-library(caTools)
+library(htmlwidgets)
+require('Seurat.utils')
+library(plotly)
+#library(caTools)
 #library(car)
-library(caret)
+#library(caret)
 #library(InformationValue)
-library(pROC)
-library(ROCR)
-fragment<-file.path('/home/em_b/Desktop/snRNA+ATAC_huPBMC/GSM7830528_Sample_0_atac_fragments.tsv.gz')
+#library(pROC)
+#library(ROCR)
+fragment<-file.path('/home/deviancedev01/work_stuff/multiome_processing/atac_fragments.tsv.gz')
+#---extract barcodes
 total_counts <- CountFragments(fragment)
 head(total_counts)
 summary(total_counts$frequency_count)
 cutoff <- 1000 
 barcodes <- total_counts[total_counts$frequency_count > cutoff, ]$CB
 head(barcodes)
+#-----create fragment object
 frags <- CreateFragmentObject(path = fragment, cells = barcodes)
 frags
-peaks <- CallPeaks(frags,macs2.path = '/home/em_b/anaconda3/bin/macs3')
+summary(frags@cells)
+peaks <- CallPeaks(frags,macs2.path = '/home/deviancedev01/anaconda3/bin/macs3')
 peaks
 counts <- FeatureMatrix(fragments = frags, features = peaks, cells = barcodes)
 head(counts)
-colnames(counts)
-row.names(counts)
+#View(data.frame(counts))
+head(colnames(counts))
+head(row.names(counts))
 chrom_assay <- CreateChromatinAssay(
   counts = counts,
   sep = c(":", "-"),
@@ -116,9 +123,9 @@ VariableFeatures(atac)
 DefaultAssay(atac)<-'ATAC'
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-features_path <- '/home/em_b/Desktop/snRNA+ATAC_huPBMC/GSM7830515_Sample_0_features.tsv.gz'
-barcodes_path <- '/home/em_b/Desktop/snRNA+ATAC_huPBMC/GSM7830515_Sample_0_barcodes.tsv.gz'
-matrix_path <- '/home/em_b/Desktop/snRNA+ATAC_huPBMC/GSM7830515_Sample_0_matrix.mtx.gz'
+features_path <- '/home/deviancedev01/work_stuff/multiome_processing/filtered_feature_bc_matrix/features.tsv.gz'
+barcodes_path <- '/home/deviancedev01/work_stuff/multiome_processing/filtered_feature_bc_matrix/barcodes.tsv.gz'
+matrix_path <- '/home/deviancedev01/work_stuff/multiome_processing/filtered_feature_bc_matrix/matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
 colnames(matrix)
 row.names(matrix)
@@ -224,6 +231,131 @@ p3<-ExpressionPlot(
   features = c("ACOX3"))
 p1
 p2+p3
+break 
+rna
+Idents(rna)
+data3d <- rna
+data3d <- RunUMAP(data3d,dims = 1:15,n.components = 3L)
+head(Embeddings(data3d,reduction = "umap"))
+rna@meta.data$seurat_clusters
+
+plot3d1 <- FetchData(data3d, vars = c("umap_1", "umap_2", "umap_3", "seurat_clusters"))
+plot3d1$label <- paste(plot3d1$seurat_clusters)
+fig <- plot_ly(data = plot3d1, 
+               x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+               color = ~seurat_clusters, 
+               colors = c("lightseagreen",
+                          "gray50",
+                          "darkgreen",
+                          "red4",
+                          "red",
+                          "turquoise4",
+                          "black",
+                          "yellow4",
+                          "royalblue1",
+                          "lightcyan3",
+                          "peachpuff3",
+                          "khaki3",
+                          "gray20",
+                          "orange2",
+                          "royalblue4",
+                          "yellow3",
+                          "gray80",
+                          "darkorchid1",
+                          "lawngreen",
+                          "plum2",
+                          "darkmagenta"),
+               type = "scatter3d", 
+               mode = "markers", 
+               marker = list(size = 2, width=2),
+               text=~label,
+               hoverinfo="text")%>%layout(title='scRNAseq_multiome')
+fig
+#setwd('/home/em_b/work_stuff/snRNA+ATAC_huPBMC')
+#saveWidget(ggplotly(fig), file = "multiome_rna.html")
+
+head(data3d@meta.data)
+goi <- "CD14"
+plotting.data <- FetchData(data3d, vars = c("umap_1", "umap_2", "umap_3","seurat_clusters","Expression"=goi), layer = 'data')
+#Cutoff <- quantile(plotting.data[,goi], probs = .95)
+#plotting.data$"ExprCutoff" <- ifelse(test = plotting.data[,goi] <Cutoff, yes = plotting.data[,goi], no = Cutoff)
+plotting.data$label <- paste(rownames(plotting.data)," - ", plotting.data[,goi], sep="")
+head(plotting.data)
+break
+fig2<-plot_ly(data = plotting.data,
+        name = goi,
+        x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+        color = plotting.data$CD14, # you can just run this against the column for the gene as well using ~ACTB, the algorith will automatically scale in that case based on maximal and minimal values
+        opacity = .5,
+        colors = c('darkgrey', 'red'), 
+        type = "scatter3d", 
+        mode = "markers",
+        marker = list(size = 3), 
+        text=~seurat_clusters,
+        hoverinfo="text"
+) %>%layout(title=goi)
+#saveWidget(ggplotly(fig2), file = "multiome_rna_cd14.html")
+#-------------------------------------------------------------
+break 
+atac
+Idents(atac)
+data3d <- atac
+
+head(data3d@meta.data)
+data3d <- RunUMAP(object = data3d, reduction = 'lsi',
+                  dims = 2:30,
+                  n.components = 3L)
+levels(atac)
+atac@meta.data$predicted.id
+#data3d <- ScaleData(data3d)#, features = all.genes)
+#data3d <- RunPCA(data3d, features = VariableFeatures(object = top1000.atac))
+#data3d
+#data3d <- RunUMAP(data3d,dims = 1:15,n.components = 3L)
+head(Embeddings(data3d,reduction = "umap"))
+plot3d1 <- FetchData(data3d, vars = c("umap_1", "umap_2", "umap_3","TSS.enrichment","predicted.id"))
+plot3d1$label<-paste(plot3d1$predicted.id)
+fig3 <- plot_ly(data = plot3d1, 
+               x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+               color = ~predicted.id, 
+               colors = c("lightseagreen",
+                          "gray50",
+                          "darkgreen",
+                          "red4",
+                          "red",
+                          "turquoise4",
+                          "black",
+                          "yellow4",
+                          "royalblue1",
+                          "lightcyan3",
+                          "peachpuff3",
+                          "khaki3",
+                          "gray20",
+                          "orange2",
+                          "royalblue4",
+                          "yellow3",
+                          "gray80",
+                          "darkorchid1",
+                          "lawngreen",
+                          "plum2",
+                          "darkmagenta"),
+               type = "scatter3d", 
+               mode = "markers", 
+               marker = list(size = 3, width=2),
+               text=~label,
+               hoverinfo="text")%>%layout(title='scATACseq_multiome')
+fig3
+#saveWidget(ggplotly(fig3), file = "multiome_atac.html")
+fig4 <- plot_ly(data = plot3d1, 
+                x = ~umap_1, y = ~umap_2, z = ~umap_3, 
+                color = ~TSS.enrichment, 
+                colors = c('skyblue','red'),
+                type = "scatter3d", 
+                mode = "markers", 
+                marker = list(size = 3, width=2),
+                text=~label,
+                hoverinfo="text")%>%layout(title='scATACseq_multiome')
+fig4
+#saveWidget(ggplotly(fig4), file = "multiome_atac_tss.html")
 break 
 #--------------------------------s
 saveRDS(rna,file = 'rna.rds')
