@@ -1,6 +1,5 @@
 library(Signac)
 library(Seurat)
-library(EnsDb.Hsapiens.v86)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -8,13 +7,14 @@ library(ggridges)
 library(htmlwidgets)
 require('Seurat.utils')
 library(plotly)
+library(EnsDb.Mmusculus.v79)
 #library(caTools)
 #library(car)
 #library(caret)
 #library(InformationValue)
 #library(pROC)
 #library(ROCR)
-fragment<-file.path('/home/deviancedev01/work_stuff/multiome_processing/atac_fragments.tsv.gz')
+fragment<-file.path('/home/deviancedev01/work_stuff/multiome_MB_tumorigenesis/p7_gnp/outs/atac_fragments.tsv.gz')
 #---extract barcodes
 total_counts <- CountFragments(fragment)
 head(total_counts)
@@ -39,15 +39,15 @@ chrom_assay <- CreateChromatinAssay(
   fragments = frags,
   min.cells = 10,
   min.features = 200,
-  genome = 'hg38')
+  genome = 'mm10')
 atac <- CreateSeuratObject(
   counts = chrom_assay,
   assay = 'ATAC',
   project = 'scATAC')
-annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Mmusculus.v79)
 annotations
 seqlevels(annotations) <- paste0('chr', seqlevels(annotations))
-genome(annotations) <- "hg38"
+genome(annotations) <- "mm10"
 annotations
 Annotation(atac) <- annotations
 atac[['ATAC']]
@@ -106,7 +106,9 @@ top500.atac<-FindTopFeatures(atac)[1:500]
 row.names(top500.atac)
 cat('cleaned ATACseq data is now ok for gene activity analysis')
 gene.activities <- GeneActivity(atac)
+#View(data.frame(gene.activities))
 atac[['correlated_gene_activity']] <- CreateAssayObject(counts = gene.activities)
+head(atac@meta.data)
 cat('transfer to gene activity layer')
 DefaultAssay(atac)<-'correlated_gene_activity'
 atac <- NormalizeData(
@@ -118,21 +120,21 @@ atac<-FindVariableFeatures(atac)
 atac<-ScaleData(atac)
 atac
 top1000.atac <- head(VariableFeatures(atac), 1000)
-top1000.atac
-VariableFeatures(atac)
+head(top1000.atac)
+head(VariableFeatures(atac))
 DefaultAssay(atac)<-'ATAC'
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-features_path <- '/home/deviancedev01/work_stuff/multiome_processing/filtered_feature_bc_matrix/features.tsv.gz'
-barcodes_path <- '/home/deviancedev01/work_stuff/multiome_processing/filtered_feature_bc_matrix/barcodes.tsv.gz'
-matrix_path <- '/home/deviancedev01/work_stuff/multiome_processing/filtered_feature_bc_matrix/matrix.mtx.gz'
+features_path <- '/home/deviancedev01/work_stuff/multiome_MB_tumorigenesis/p7_gnp/outs/filtered_feature_bc_matrix/features.tsv.gz'
+barcodes_path <- '/home/deviancedev01/work_stuff/multiome_MB_tumorigenesis/p7_gnp/outs/filtered_feature_bc_matrix/barcodes.tsv.gz'
+matrix_path <- '/home/deviancedev01/work_stuff/multiome_MB_tumorigenesis/p7_gnp/outs/filtered_feature_bc_matrix/matrix.mtx.gz'
 matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-colnames(matrix)
-row.names(matrix)
+head(colnames(matrix))
+head(row.names(matrix))
 rna <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'rna')
 summary(rna@active.ident)
 gc()
-#rna[["percent.mt"]] <- PercentageFeatureSet(rna, pattern = "^MT-")
+rna[["percent.mt"]] <- PercentageFeatureSet(rna, pattern = "^Mt-")
 VlnPlot(rna, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
 rna <- subset(rna, subset = nFeature_RNA > 200 & nFeature_RNA < 11000)# & percent.mt <5)
 VlnPlot(rna, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol=3)
@@ -140,10 +142,10 @@ FeatureScatter(rna, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + geom_s
 rna <- NormalizeData(rna)
 gc()
 rna <- FindVariableFeatures(rna, selection.method = "vst", nfeatures = 2000)
-VariableFeatures(rna)
+head(VariableFeatures(rna))
 rna
 rna_df<-data.frame(rna[['RNA']]$counts)
-atac_df<-data.frame(rna[['RNA']]$counts)
+atac_df<-data.frame(atac[['ATAC']]$counts)
 top5000.rna <- head(VariableFeatures(rna), 5000)
 top5000.rna
 plot1 <- VariableFeaturePlot(rna)
@@ -154,26 +156,32 @@ rna <- ScaleData(rna, features = all.genes)
 gc()
 dim(rna)
 rna <- RunPCA(rna, features = VariableFeatures(object = rna))
+gc()
 rna <- RunUMAP(rna, dims = 1:30)
 DimHeatmap(rna, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(rna)
 rna <- FindNeighbors(rna, dims = 1:30)
-rna <- FindClusters(rna,resolution = 0.1)
+#--adjust resolution to atac umap clusters
+rna <- FindClusters(rna,resolution = 0.2135)
 DimPlot(object = rna, label = TRUE,pt.size = 1)
-VlnPlot(rna, features = c('PTPRC','CD3D','CD4','CD8A','IFNG','CD19','CD22','CD86','ITGAX'),cols = c())
+VlnPlot(rna, features = c('Sox2','Olig2','Mycn','Mrc1','Rbfox3',
+                          'Mki67','Gli2'),cols = c())
 FeaturePlot(
   object = rna,
-  features = c('PTPRC','CD3D','CD4','CD8A','IFNG','CD19','CD22','CD86','ITGAX'),
+  features = c('Sox2','Olig2','Mycn','Mrc1','Rbfox3',
+               'Mki67','Gli2'),
   pt.size = 0.1,
   max.cutoff = 'q95',
   ncol = 3,
   cols = c('grey','red'))
 DimPlot(object = rna, label = TRUE,pt.size = 1)
 Idents(rna)
-levels(rna@meta.data$seurat_clusters)<-c('cytoxic_t_cells','t_helper_cells','mono/macro','b_cells')
+levels(rna@meta.data$seurat_clusters)<-c('MB_tumors','mature_neurons','neurons1','early_neurons',
+                                         'oligodendrocytes','neurons2','microglia','unknown1','unknown2')
 rna@meta.data$seurat_clusters
 head(rna)
-new.cluster.ids <- c('cytotoxic_t_cells','t_helper_cells','mono/macro','b_cells')
+new.cluster.ids <- c('MB_tumors','mature_neurons','neurons1','early_neurons',
+                     'oligodendrocytes','neurons2','microglia','unknown1','unknown2')
 names(new.cluster.ids) <- levels(rna)
 rna <- RenameIdents(rna, new.cluster.ids)
 DimPlot(rna, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
@@ -187,7 +195,8 @@ head(atac)
 head(Idents(atac))
 head(Idents(rna))
 rna$seurat_clusters
-new.cluster.ids <- c('cytotoxic_t_cells','t_helper_cells','mono/macro','b_cells')
+new.cluster.ids <- c('MB_tumors','mature_neurons','neurons1','early_neurons',
+                     'oligodendrocytes','neurons2','microglia','unknown1','unknown2')
 names(new.cluster.ids) <- levels(atac)
 names(new.cluster.ids)
 new.cluster.ids
@@ -197,15 +206,15 @@ atac <- RenameIdents(atac, new.cluster.ids)
 head(Idents(atac))
 head(Idents(rna))
 DimPlot(object = atac, label = TRUE,pt.size = 1)
-rna_umap <- DimPlot(rna, label = TRUE,pt.size = 1,label.size = 8)+ ggtitle("gene_transcripts")
-atac_features<-FeaturePlot(atac,features = c('PTPRC','CD3D','CD4','ICD8A','IFNG','CD19',
-                              'CD22','CD86','ITGAX'),cols = c('grey','red'),pt.size = 2)
-atac_umap<-DimPlot(object = atac, label = TRUE,pt.size = 1,label.size = 8)
+rna_umap <- DimPlot(rna, label = TRUE,pt.size = 1,label.size = 4)+ ggtitle("gene_transcripts")
+atac_features<-FeaturePlot(atac,features = c('Sox2','Olig2','Mycn','Mrc1','Rbfox3',
+                                             'Mki67','Gli2'),cols = c('grey','red'),pt.size = 2)
+atac_umap<-DimPlot(object = atac, label = TRUE,pt.size = 1,label.size = 4)+ ggtitle("chromatin_accessibility")
 rna_umap+atac_umap
 #-------------------------------------------------------------------
 peaks <- FindMarkers(
   object = atac,
-  ident.1 = 'mono/macro',
+  ident.1 = 'MB_tumors',
   test.use = 'negbinom',
   latent.vars = 'nCount_ATAC',
   logfc.threshold=1.5,
@@ -228,7 +237,7 @@ p2 <- TilePlot(
   region = 'chr4-8409026-8410072')
 p3<-ExpressionPlot(
   object = rna,
-  features = c("ACOX3"))
+  features = c("Acox3"))
 p1
 p2+p3
 break 
@@ -275,7 +284,7 @@ fig
 #saveWidget(ggplotly(fig), file = "multiome_rna.html")
 
 head(data3d@meta.data)
-goi <- "CD14"
+goi <- "Gli2"
 plotting.data <- FetchData(data3d, vars = c("umap_1", "umap_2", "umap_3","seurat_clusters","Expression"=goi), layer = 'data')
 #Cutoff <- quantile(plotting.data[,goi], probs = .95)
 #plotting.data$"ExprCutoff" <- ifelse(test = plotting.data[,goi] <Cutoff, yes = plotting.data[,goi], no = Cutoff)
@@ -285,7 +294,7 @@ break
 fig2<-plot_ly(data = plotting.data,
         name = goi,
         x = ~umap_1, y = ~umap_2, z = ~umap_3, 
-        color = plotting.data$CD14, # you can just run this against the column for the gene as well using ~ACTB, the algorith will automatically scale in that case based on maximal and minimal values
+        color = plotting.data$Gli2, # you can just run this against the column for the gene as well using ~ACTB, the algorith will automatically scale in that case based on maximal and minimal values
         opacity = .5,
         colors = c('darkgrey', 'red'), 
         type = "scatter3d", 
@@ -294,6 +303,7 @@ fig2<-plot_ly(data = plotting.data,
         text=~seurat_clusters,
         hoverinfo="text"
 ) %>%layout(title=goi)
+fig2
 #saveWidget(ggplotly(fig2), file = "multiome_rna_cd14.html")
 #-------------------------------------------------------------
 break 
