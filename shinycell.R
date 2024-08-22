@@ -14,3 +14,4 @@ rsconnect::setAccountInfo(name='9a17md-chakkapong-burudpakdee',
                           token='EB963E0629DB74B4F40C8CE2621114B3',
                           secret='deDqnsWWrRZfMUby+x+4ppKNwS2BJ0Ns+IigjjLV')
 rsconnect::deployApp('/home/deviancedev01/work_stuff/multiome_MB_tumorigenesis/adult_mb/adult_shinyapp')
+#---do not archive until ready to delete
