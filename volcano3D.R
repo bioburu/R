@@ -51,7 +51,6 @@ LRT<-DESeq(deseq,
           parallel = TRUE)
 res<-deseq_polar(DE,LRT,'condition')
 str(res)
-break 
 volcano3D(
   res,
   type = 2,
@@ -76,4 +75,7 @@ volcano3D(
   xy_aspectratio = 3,
   z_aspectratio = 1,
   camera_eye = list(x = 0.9, y = 0.9, z = 0.9))
-break 
+radial_ggplot(res,
+              marker_size = 2.3,
+              legend_size = 10) +
+  theme(legend.position = "right")
