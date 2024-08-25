@@ -1,116 +1,215 @@
-#https://hastie.su.domains/ISLR2/Labs/Rmarkdown_Notebooks/Ch10-deeplearning-lab-keras.html
 library(ISLR2)
-library(keras)
+library(keras3)
 library(ggplot2)
 library(InformationValue)
 library(neuralnet)
 library(pROC)
 library(ROCR)
-print("Uploading file and editing")
-df<-read.csv(file = file.choose())
-row.names(df)<-df$X
-colnames(df)[2]<-'Genotype'
-df$Genotype<-ifelse(df$Genotype=='mutated',1,0)
-df<-df[,-1]
-print("Splitting into train and test sets")
-print("Adjust split ratio here as needed:")
-subsample<-caTools::sample.split(df, SplitRatio=0.3)
-train<-subset(df, subsample==TRUE)
-dim(train)
-train<-na.omit(train)
-dim(train)
-print("Assigning testing data set")
-test<-subset(df,subsample==FALSE)
-dim(test)
-test<-na.omit(test)
-dim(test)
-str(df)
-print("Fitting with Neuralnet")
-nn=neuralnet(Genotype~
-              CD34+ATP10A+TRH+POU4F1+CTAG2+LAMP5+SERPINF1+CSRP2+DNTT+MAN1A1+
-              HOXA4+MREG+MEIS1+HOXA6+HOXA7+PKLR+PBX3+CTSE+ROBO1+ITM2C+
-              HPGDS+DPP4+HOXA5+SPON1+BAALC+GNG7+NPR3+PKLR+ARHGAP22+HOXA1+
-              PPP1R26+APP+CD200+SIDT1+KIF17+ASB9+S100B+POLE+GYPC+FBLN5+
-              SPON1+HOMER2+FZD6+CDKN2C+SPIB+FECH+GPA33+GALC+GJA1+ITM2A
-            , data=train, 
-            hidden=c(20,12),act.fct = "logistic",
-            linear.output = FALSE)
-plot(nn)
-#-------------------------------------------------------------------------
-print("Prepping test data for keras tensorflow")
-id<-nrow(test)
-total_rows <- nrow(df)
-testid <- sample(1:total_rows, id)
-testid
-print("Convert data frame to x and y tensors for Keras")
-print("x matrix is without intercept (-1) and scaled with mean of 0 with std of 1")
-x <- scale(model.matrix(Genotype ~ . - 1, data = df))
-print("y matrix is response integer")
-y <- df$Genotype
-print("Make model with 2 hidden layers with same hidden units as Neuralnet and RedLU activation function")
-print("Drop out layer rate of 40% per iteration")
-print("output layer at 1 for binary response")
-keras <- keras_model_sequential() %>%
-  layer_dense(input_shape = ncol(x),
-              units = 20, activation = "relu") %>%
-  layer_dense(units = 12, activation = "softmax") %>%
-  layer_dropout(rate = 0.6)%>%
-  layer_dense(units=1)
-#
-print("Compile function to output mean absolute error")
-keras %>% compile(loss = "mse", optimizer = optimizer_rmsprop(),metrics = list("mean_absolute_error"))
-#keras %>% compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = c('accuracy'))
-
-print("Enter data frame into model now")
-history <- keras %>% fit(x[-testid, ], y[-testid], epochs = 400, batch_size = 50,
-                      validation_data = list(x[testid, ], y[testid])
+library(Seurat)
+library(tidyverse)
+library(dplyr)
+library(ggridges)
+library(caTools)
+library(car)
+library(caret)
+setwd('/home/deviancedev01/work_stuff/human_develop_timecourse')
+#-------extract matrix from seurat object 
+data<-readRDS('/home/deviancedev01/work_stuff/human_develop_timecourse/GSE217511_RAW/save_file2.rda')
+table(data@meta.data$orig.ident)
+gene_list<-row.names(data@assays$RNA$counts)
+table(data@meta.data$cell_types)
+#------subset group types
+#data<-subset(data,subset=cell_types=='opc')
+#data@meta.data
+#table(data@meta.data$cell_types)
+#head(data@meta.data)
+#-------extract data
+Data<-subset(data,orig.ident=='17wks')
+Data2<-subset(data,orig.ident=='20wks')
+data<-merge(Data,Data2)
+table(data@meta.data$orig.ident)
+head(data@meta.data)
+matrix<-FetchData(data,vars = c('orig.ident',gene_list),layer = 'counts')
+table(matrix$orig.ident)
+#matrix<-subset(matrix,
+#       orig.ident%in%c('17wks','20wks'))
+#Idents(data)<-data@meta.data$orig.ident
+#------find genes
+Idents(data)<-data@meta.data$orig.ident
+data<-JoinLayers(data)
+#---adjust to get ~40 genes
+x<-FindMarkers(data,
+            ident.1 = '20wks',
+            ident.2 = '17wks',
+            logfc.threshold = 1.5,
+            only.pos=TRUE,
+            test.use = 'bimod',
+            min.pct=0.3)
+VlnPlot(data,
+        features = c(row.names(x))[21:40],
+        layer = 'counts')
+#-----remove genes with low transcript counts (30 COUNT CUTOFF)
+candidate_genes<-c('PLCG2','KAZN','GRIK3','PDZD2','SORCS1',
+                   'SYN3','OPCML','CACNA1C','DHFR','DSCAML1',
+                   'CELF4','CACNA1A','PTPRN2','CALN1',
+                   'KIAA1217','RPL41','KIRREL3','CSMD1','AGAP1',
+                   'XKR4','KCNMA1','TRPM3','OOEP','MAPT',
+                   'NAV2','HS3ST4','RPL35A','PTPRS','CSMD2',
+                   'XYLT1')
+VlnPlot(data,
+        features = c(candidate_genes)[1:20],
+        layer = 'data')
+VlnPlot(data,
+        features = c(candidate_genes)[21:48],
+        layer = 'data')
+#----model candidates
+cat(candidate_genes,sep='+')
+matrix$orig.ident<-ifelse(matrix$orig.ident=='20wks', 1, 0)
+table(matrix$orig.ident)
+#------Even out group numbers and shuffle
+matrix<-sample(matrix)
+table(matrix$orig.ident)
+sample <- sample(c(TRUE, FALSE), nrow(matrix), replace=TRUE, prob=c(0.5,0.5))
+train  <- matrix[sample, ]
+table(train$orig.ident)
+test   <- matrix[!sample, ]
+table(test$orig.ident)
+set.seed(13)
+str(matrix)
+#------------logistic regression
+model<-glm(orig.ident~PLCG2+KAZN+GRIK3+PDZD2+SORCS1+
+             SYN3+OPCML+CACNA1C+DHFR+DSCAML1+
+             CELF4+CACNA1A+CALN1+KIAA1217+
+             RPL41+KCNMA1+
+             NAV2+HS3ST4+
+             PTPRS+CSMD2+XYLT1,
+           data = train, family = binomial)
+vif(model)
+summary(model)
+varImp(model)
+logLik(model)
+summary(predict(model, test, type = 'response'))
+predicted<-predict(model, test, type = 'response')
+pred_factor <- predicted
+pred_factor<- round(pred_factor)
+pred_factor<-as.factor(pred_factor)
+summary(pred_factor)
+table(test$orig.ident)
+actual<-as.factor(test$orig.ident)
+confusion_matrix<-caret::confusionMatrix(pred_factor, actual,positive='1')
+actuals<-test$orig.ident
+df<-cbind(actuals,predicted)
+df<-data.frame(df,check.names = FALSE)
+optCutoff<-optimalCutoff(actuals = actuals,
+                         predictedScores = predicted,
+                         optimiseFor = "Ones",
+                         returnDiagnostics = TRUE)
+head(optCutoff)
+auc(actuals,predicted)
+confusion_matrix<-caret::confusionMatrix(pred_factor, actual,positive='1')
+confusion_matrix
+fourfoldplot(as.table(confusion_matrix),
+             color = c('grey','skyblue'),
+             std='all.max',
+             main='10wks=0 20wks=1')
+plot.roc(actuals, predicted,
+         percent = TRUE,
+         main = 'AUC: 17wks>20wks',
+         add =  FALSE,
+         asp = NA,
+         print.auc = TRUE,
+         print.auc.col='red',
+         print.auc.cex=1,
+         grid=TRUE,
+         grid.col='skyblue',
+         identity.col='blue',
+         identity.lty=8,
+         col='red',
+         print.thres=TRUE,
+         print.thres.pch=5,
+         print.thres.col='black',
+         ci=TRUE)
+list<-c('PLCG2','KAZN','GRIK3','PDZD2','SORCS1',
+          'SYN3','OPCML','CACNA1C','DHFR','DSCAML1',
+          'CELF4','CACNA1A','CALN1','KIAA1217',
+          'RPL41','KCNMA1','NAV2','HS3ST4','PTPRS',
+        'CSMD2','XYLT1')
+DoHeatmap(
+  data,
+  features = list,
+  cells = NULL,
+  group.by = "ident",
+  group.bar = TRUE,
+  group.colors = NULL,
+  disp.min = -2.5,
+  disp.max = NULL,
+  slot = "scale.data",
+  assay = NULL,
+  label = TRUE,
+  size = 5.5,
+  hjust = 0,
+  vjust = 0,
+  angle = 45,
+  raster = TRUE,
+  draw.lines = TRUE,
+  lines.width = NULL,
+  group.bar.height = 0.02,
+  combine = TRUE
 )
-keras %>%evaluate(x[testid, ], y[testid])
-#
-print("Confusion matrix for Neural Net model")
-predict<-compute(nn,test)
-predict<- round(predict$net.result)
-predict<-as.factor(predict)
-act<-as.factor(test$Genotype)
-detach(package:neuralnet,unload = T)
-caret::confusionMatrix(act, predict)
-print("Standard error rate")
-head(nn$result.matrix)
-table(df$Genotype)
-predicted.scores<-predict
-actual.scores<-test$Genotype
-df2<-cbind(actual.scores,predicted.scores)
+#-------------neural network
+nn=neuralnet(orig.ident~PLCG2+KAZN+GRIK3+PDZD2+SORCS1+
+               SYN3+OPCML+CACNA1C+DHFR+DSCAML1+
+               CELF4+CACNA1A+CALN1+KIAA1217+
+               RPL41+KCNMA1+
+               NAV2+HS3ST4+
+               PTPRS+CSMD2+XYLT1,data=train, 
+             hidden=c(20,12),act.fct = "logistic",
+             linear.output = FALSE)
+plot(nn)
+#dev.print(pdf, 'nn_plot.pdf') 
+#-------------------------------------------------------------------------------
+summary(predict(nn, test, type = 'response'))
+predicted2<-predict(nn, test, type = 'response')
+pred_factor2 <- predicted2
+pred_factor2<- round(pred_factor2)
+pred_factor2<-as.factor(pred_factor2)
+summary(pred_factor2)
+table(test$orig.ident)
+actual2<-as.factor(test$orig.ident)
+confusion_matrix2<-caret::confusionMatrix(pred_factor2, actual2,positive='1')
+confusion_matrix2
+actuals2<-test$orig.ident
+df2<-cbind(actuals2,predicted2)
 df2<-data.frame(df2,check.names = FALSE)
-print("Displaying AUC score of Neural Net model")
-auc(df2$actual.scores,df2$predicted.scores)
-print("Plotting ROC curve with Neural Net model")
-ROC_pred<-prediction(df2$predicted.scores,df2$actual.scores)
-ROC_perf<-performance(ROC_pred,'tpr','fpr')
-#plot(ROC_perf,colorize=TRUE,print.cutoffs.at=seq(0.1,by=0.1))
-print("Confusion matrix for keras model")
-predicted <- predict(keras, x[testid, ])
-predicted[predicted < 0] <- 0     
-predicted[predicted >1] <- 1 
-predicted<-round(predicted)
-predicted<-as.factor(predicted)
-predicted
-testid
-actuals<-df$Genotype[testid]
-actuals<-as.factor(actuals)
-caret::confusionMatrix(actuals, predicted)
-print("Compare tensorflow with neuralnet")
-print("Tensorflow error:")
-keras %>%evaluate(x[testid, ], y[testid])
-print("Neuralnet error:")
-head(nn$result.matrix)
-print("Did Keras beat me?")
-plot(history)
-#plot(nn)
-break
-
-
-
-
+optCutoff2<-optimalCutoff(actuals = actuals2,
+                         predictedScores = predicted2,
+                         optimiseFor = "Ones",
+                         returnDiagnostics = TRUE)
+head(optCutoff2)
+auc(actuals2,predicted2)
+summary(nn)
+#caret::confusionMatrix(pred_factor2, actual2,positive='1')
+fourfoldplot(as.table(confusion_matrix2),
+             color = c('grey','skyblue'),
+             std='all.max',
+             main='17wks=0 20wks=1')
+plot.roc(actuals2, predicted2,
+         percent = TRUE,
+         main = 'AUC:_17wks>20wks_neural_network',
+         add =  FALSE,
+         asp = NA,
+         print.auc = TRUE,
+         print.auc.col='red',
+         print.auc.cex=1,
+         grid=TRUE,
+         grid.col='skyblue',
+         identity.col='blue',
+         identity.lty=8,
+         col='red',
+         print.thres=TRUE,
+         print.thres.pch=5,
+         print.thres.col='black',
+         ci=TRUE)
 
 
 
