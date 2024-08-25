@@ -159,6 +159,10 @@ Idents(data)<-data@meta.data$orig.ident
 table(data@active.ident)
 cds <- as.cell_data_set(data)
 head(colData(cds))
+recreate.partition <- c(rep(1, length(cds@colData@rownames)))
+names(recreate.partition) <- cds@colData@rownames
+recreate.partition <- as.factor(recreate.partition)
+cds@clusters@listData[["UMAP"]][["partitions"]] <- recreate.partition
 #----Edit partitions layer
 names(cds@clusters@listData$UMAP$partitions) <- cds@colData@rownames
 #cds
