@@ -165,7 +165,7 @@ nn=neuralnet(orig.ident~PLCG2+KAZN+GRIK3+PDZD2+SORCS1+
                PTPRS+CSMD2+XYLT1,data=train, 
              hidden=c(20,12),act.fct = "logistic",
              linear.output = FALSE)
-plot(nn)
+plot(nn,rep='best')
 #dev.print(pdf, 'nn_plot.pdf') 
 #-------------------------------------------------------------------------------
 summary(predict(nn, test, type = 'response'))
