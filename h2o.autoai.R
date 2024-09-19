@@ -101,3 +101,29 @@ p1 <- plot_features(explanation_rf[4:6,], ncol = 1) + ggtitle("rf")
 p2 <- plot_features(explanation_glm[4:6,], ncol = 1) + ggtitle("glm")
 p3 <- plot_features(explanation_gbm[4:6,], ncol = 1) + ggtitle("gbm")
 gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+
+#---automated machine learning
+aml <- h2o.automl(x, y,
+                  training_frame = train_obs.h2o,
+                  max_models = 20,
+                  seed = 1)
+lb <- h2o.get_leaderboard(object = aml, extra_columns = "ALL")
+lb<-as.data.frame(lb)
+head(lb)
+h2o.varimp_heatmap(aml)
+h2o.model_correlation_heatmap(aml,local_obs.h2o)
+exa <- h2o.explain(aml, local_obs.h2o)
+exa
+#---pick best model
+m <- h2o.get_best_model(aml)
+m
+#--------------------------------------------------
+DoHeatmap(DATA,features = c('C1QC','SPP1','YWHAH'))
+h2o.varimp_heatmap(aml)
+m
+break 
+DoHeatmap(DATA,features = model_genes)
+setwd('/home/deviancedev01/Desktop/cd14')
+write.csv(model_genes,file = 'escc_cd14_7reps.csv')
+
+SaveSeuratRds(DATA,file = 'escc_cd14_7reps.rda')
