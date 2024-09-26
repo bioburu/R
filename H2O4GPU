@@ -1,3 +1,5 @@
 export CUDA_HOME=/usr/local/cuda12.6
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/lib64/:$CUDA_HOME/lib/:$CUDA_HOME/extras/CUPTI/lib64
 sudo apt-get install libopenblas-dev pbzip2
+sudo apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev
+conda create -n h2o4gpuenv -c h2oai -c conda-forge -c rapidsai h2o4gpu-cuda10
