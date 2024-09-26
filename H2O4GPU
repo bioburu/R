@@ -8,3 +8,22 @@ conda activate h2o4gpuenv
 #---R
 if (!require(devtools)) install.packages("devtools")
 devtools::install_github("h2oai/h2o4gpu", subdir = "src/interface_r")
+library(reticulate)
+library(tidyverse)
+
+# Seeing your enviroments
+conda_list()
+
+use_condaenv('/home/deviancedev01/miniforge3/envs/h2o4gpuenv/bin/python')
+library(h2o4gpu)
+
+# Setup dataset
+x <- iris[1:4]
+y <- as.integer(iris$Species) - 1
+
+# Initialize and train the classifier
+model <- h2o4gpu.random_forest_classifier() %>% fit(x, y)
+
+# Make predictions
+predictions <- model %>% predict(x)
+predictions
