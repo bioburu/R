@@ -38,71 +38,6 @@ train_obs.h2o <- as.h2o(train_obs)
 train_obs.h2o
 local_obs.h2o <- as.h2o(local_obs)
 local_obs.h2o
-#----logistic regression
-h2o_glm <- h2o.glm(x, y, training_frame = train_obs.h2o, family = "binomial")
-h2o_glm
-#---partial dependency plot for regression
-h2o.partialPlot(h2o_glm,
-                newdata = train_obs.h2o,
-                cols = "MonthlyCharges",
-                plot=TRUE,
-                plot_stddev=TRUE)
-explainer_h2o_glm <- lime(train_obs,
-                  h2o_glm,
-                  bin_continuous = TRUE,
-                  quantile_bins = FALSE)
-explanation_glm <- lime::explain(local_obs[1:6,],
-                                 explainer_h2o_glm,
-                             n_labels = 1,
-                             n_features = 3)
-h2o.confusionMatrix(h2o_glm, local_obs.h2o, valid = FALSE, xval = FALSE)
-plot_features(explanation_glm)
-plot_explanations(explanation_glm)
-#----randomforest
-h2o_rf <- h2o.randomForest(x, y,
-                           nfolds = 5,
-                           training_frame = train_obs.h2o)
-h2o_rf
-h2o.partialPlot(h2o_rf,
-                newdata = train_obs.h2o,
-                cols = "MonthlyCharges")
-explainer_h2o_rf  <- lime(train_obs,
-                          h2o_rf,
-                          bin_continuous = TRUE,
-                          quantile_bins = FALSE)
-explanation_rf <- lime::explain(local_obs[1:6,],
-                                explainer_h2o_rf,
-                                n_labels = 1,
-                                n_features = 3)
-h2o.confusionMatrix(h2o_rf,local_obs.h2o, valid = FALSE, xval = FALSE)
-plot_features(explanation_rf)
-plot_explanations(explanation_rf)
-
-#-----gradient boosting tree model
-h2o_gbm <- h2o.gbm(x, y,
-                   training_frame = train_obs.h2o,
-                   nfolds = 5)
-head(h2o.gbm)
-h2o.partialPlot(h2o_gbm,
-                data = train_obs.h2o,
-                cols = "MonthlyCharges")
-explainer_h2o_gbm  <- lime(train_obs,
-                          h2o_gbm,
-                          bin_continuous = TRUE,
-                          quantile_bins = FALSE)
-explanation_gbm <- lime::explain(local_obs[1:6,],
-                                 explainer_h2o_gbm,
-                                 n_labels = 1,
-                                 n_features = 3)
-plot_features(explanation_gbm)
-plot_explanations(explanation_gbm)
-
-p1 <- plot_features(explanation_rf[4:6,], ncol = 1) + ggtitle("rf")
-p2 <- plot_features(explanation_glm[4:6,], ncol = 1) + ggtitle("glm")
-p3 <- plot_features(explanation_gbm[4:6,], ncol = 1) + ggtitle("gbm")
-gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
-
-#---automated machine learning
 aml <- h2o.automl(x, y,
                   training_frame = train_obs.h2o,
                   max_models = 20,
@@ -110,20 +45,87 @@ aml <- h2o.automl(x, y,
 lb <- h2o.get_leaderboard(object = aml, extra_columns = "ALL")
 lb<-as.data.frame(lb)
 head(lb)
-h2o.varimp_heatmap(aml)
-h2o.model_correlation_heatmap(aml,local_obs.h2o)
-exa <- h2o.explain(aml, local_obs.h2o)
-exa
-#---pick best model
-m <- h2o.get_best_model(aml)
-m
-#--------------------------------------------------
-DoHeatmap(DATA,features = c('C1QC','SPP1','YWHAH'))
-h2o.varimp_heatmap(aml)
-m
+best.model <- h2o.getModel("GBM_3_AutoML_1_20240930_104436")
+best.model
 break 
-DoHeatmap(DATA,features = model_genes)
-setwd('/home/deviancedev01/Desktop/cd14')
-write.csv(model_genes,file = 'escc_cd14_7reps.csv')
+#----plot tree
+Tree = h2o.getModelTree(model = best.model, tree_number = 1)
+createDataTree <- function(h2oTree) {
+  
+  h2oTreeRoot = h2oTree@root_node
+  
+  dataTree = Node$new(h2oTreeRoot@split_feature)
+  dataTree$type = 'split'
+  
+  addChildren(dataTree, h2oTreeRoot)
+  
+  return(dataTree)
+}
 
-SaveSeuratRds(DATA,file = 'escc_cd14_7reps.rda')
+addChildren <- function(dtree, node) {
+  
+  if(class(node)[1] != 'H2OSplitNode') return(TRUE)
+  
+  feature = node@split_feature
+  id = node@id
+  na_direction = node@na_direction
+  
+  if(is.na(node@threshold)) {
+    leftEdgeLabel = printValues(node@left_levels, na_direction=='LEFT', 4)
+    rightEdgeLabel = printValues(node@right_levels, na_direction=='RIGHT', 4)
+  }else {
+    leftEdgeLabel = paste("<", node@threshold, ifelse(na_direction=='LEFT',',NA',''))
+    rightEdgeLabel = paste(">=", node@threshold, ifelse(na_direction=='RIGHT',',NA',''))
+  }
+  
+  left_node = node@left_child
+  right_node = node@right_child
+  
+  if(class(left_node)[[1]] == 'H2OLeafNode')
+    leftLabel = paste("prediction:", left_node@prediction)
+  else
+    leftLabel = left_node@split_feature
+  
+  if(class(right_node)[[1]] == 'H2OLeafNode')
+    rightLabel = paste("prediction:", right_node@prediction)
+  else
+    rightLabel = right_node@split_feature
+  
+  if(leftLabel == rightLabel) {
+    leftLabel = paste(leftLabel, "(L)")
+    rightLabel = paste(rightLabel, "(R)")
+  }
+  
+  dtreeLeft = dtree$AddChild(leftLabel)
+  dtreeLeft$edgeLabel = leftEdgeLabel
+  dtreeLeft$type = ifelse(class(left_node)[1] == 'H2OSplitNode', 'split', 'leaf')
+  
+  dtreeRight = dtree$AddChild(rightLabel)
+  dtreeRight$edgeLabel = rightEdgeLabel
+  dtreeRight$type = ifelse(class(right_node)[1] == 'H2OSplitNode', 'split', 'leaf')
+  
+  addChildren(dtreeLeft, left_node)
+  addChildren(dtreeRight, right_node)
+  
+  return(FALSE)
+}
+
+printValues <- function(values, is_na_direction, n=4) {
+  l = length(values)
+  
+  if(l == 0)
+    value_string = ifelse(is_na_direction, "NA", "")
+  else
+    value_string = paste0(paste0(values[1:min(n,l)], collapse = ', '),
+                          ifelse(l > n, ",...", ""),
+                          ifelse(is_na_direction, ", NA", ""))
+  
+  return(value_string)
+}
+dtree = createDataTree(Tree)
+GetEdgeLabel <- function(node) {return (node$edgeLabel)}
+GetNodeShape <- function(node) {switch(node$type, split = "diamond", leaf = "oval")}
+SetEdgeStyle(dtree, fontname = 'Palatino', label = GetEdgeLabel, labelfloat = TRUE,fontsize=60,color='blue')
+SetNodeStyle(dtree, fontname = 'Palatino', shape = GetNodeShape,fontsize=60,color='red')
+SetGraphStyle(dtree, rankdir = "LR", dpi=70.)
+plot(dtree, output="graph")
