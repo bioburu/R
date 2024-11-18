@@ -5,7 +5,7 @@ library(monocle3)
 library(SeuratWrappers)
 library(ggplot2)
 library(ggridges)
-setwd("/home/amp_prog/Downloads/GSE190964_RAW")
+setwd("/home/GSE190964_RAW")
 features_path <- "GSM5879885_features.tsv.gz"
 barcodes_path <- "GSM5879885_barcodes.tsv.gz"
 matrix_path <- "GSM5879885_matrix.mtx.gz"
@@ -17,9 +17,8 @@ row.names(matrix)[1:10]
 head(matrix[c('Hashtag1','Hashtag2','Hashtag6','Hashtag7','Hashtag8'),])
 HTO<-matrix[c('Hashtag1','Hashtag2','Hashtag6','Hashtag7','Hashtag8'),]
 HTO
-#--------------------------------------------------------------------------------------------------------------
 #------------Or-------------------------------------------------------------------------------------------------
-setwd('/home/amp_prog/Desktop/rstudio/CAR_T/GSE153697_+-CD19')
+setwd('GSE153697_+-CD19')
 meta<- read.delim('GSE153697_filtered_metadata_matrix.tsv')
 meta$hash.ID<-as.factor(meta$hash.ID)
 summary(meta)
@@ -62,7 +61,6 @@ data <- RunPCA(data, features = VariableFeatures(object = data))
 DimHeatmap(data, dims = 1:15, cells = 500, balanced = T)
 ElbowPlot(data)
 DimPlot(data, reduction = "pca", pt.size = 1, label = FALSE)
-break 
 #---------------------------------------------------------------------------------------------------------------------
 data<-CreateSeuratObject(counts = matrix)
 data<-NormalizeData(data)
@@ -102,7 +100,6 @@ cat('Get expression matrix from Seurat object')
 #Genes <- row.names(DF)
 #DF <- cbind(Genes,DF)
 #View(DF)
-break
 DimPlot(data, reduction = "pca", dims = c(1,2) ,pt.size = 3, label.box = TRUE, label.size = 2)
 DimPlot(data, reduction = "pca", dims = c(3,4) ,pt.size = 3, label.box = TRUE, label.size = 2)
 
