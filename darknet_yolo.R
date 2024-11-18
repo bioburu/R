@@ -6,9 +6,9 @@ library(tidyr)
 library(here)
 #---------------------User inputs-------------------------------------------
 #Assign working directory
-setwd("/home/amplified_prog/RstudioProjects/segment_image_exp")
+setwd("/home/segment_image_exp")
 #Assign image path
-image_path <- here("/home/amplified_prog/RstudioProjects/segment_image_exp/jpegs")
+image_path <- here("segment_image_exp/jpegs")
 #Assign threshold for predictions
 Threshold <- 0.19
 #Assign model parameters
