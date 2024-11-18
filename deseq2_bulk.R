@@ -8,7 +8,7 @@ library(dplyr)
 library(RColorBrewer)
 library(EnhancedVolcano)
 library(ReactomePA)
-setwd('/home/em_b/Desktop/AST_OPC_files')
+setwd('/home/AST_OPC_files')
 matrix<-read.csv('matrix_mm39.csv')
 str(matrix)
 row.names(matrix)<-make.names(matrix$external_gene_name,unique = TRUE)
@@ -113,7 +113,7 @@ dotplot(go,
         label_format=50,
         title='Tu-AST and norm-AST GO:Molecular Function pathways upregulated genes',
         showCategory=30)
-break 
+
 df<-cbind(row.names(upreg),upreg)
 colnames(df)[1]<-'Gene'
 #------------------------------------
@@ -143,7 +143,7 @@ GO_result <- enrichGO(gene = genes$entrezgene_id,
                       ont = "BP")
 GO_result
 df<-data.frame(GO_result)
-break 
+
 colnames(tester)<-c('GFP_overexp','GFP_overexp','GFP_overexp',
                     'shNeurod1','shNeurod1','shNeurod1',
                     'Neurod1_overexp','Neurod1_overexp','Neurod1_overexp')
