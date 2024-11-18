@@ -17,7 +17,6 @@ library(ggplot2)
 library(UpSetR)
 library(ChIPpeakAnno)
 library(pathview)
-#-----Part 1
 peak <- readPeakFile('/home/em_b/work_stuff/chipseq/thra_0hr_comb/peaks/thra_0hr_IgG_peaks.narrowPeak')
 table(seqnames(peak))
 peak
@@ -43,6 +42,7 @@ df<-df[order(df$V5, decreasing=TRUE),]
 summary(df$V5)
 df<-subset(df,V5> 50)
 summary(df$V5)
+#------------------------------------------------------------------------------------------------------------------
 library(Rsubread)
 library(biomaRt)
 library(dplyr)
@@ -62,54 +62,48 @@ library(pathview)
 library(simplifyEnrichment)
 library(TxDb.Mmusculus.UCSC.mm39.knownGene)
 txdb<-TxDb.Mmusculus.UCSC.mm39.knownGene
-counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386662/SRR23386662.rmdup.sort.chr.bam',
+counts<-featureCounts(files = '/home/rna/SRR23386662.rmdup.sort.chr.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
 T3_1<-data.frame(counts$counts)
 T3_1<-cbind(row.names(T3_1),T3_1)
 colnames(T3_1)<-c('Gene','MB.T3_1')
 head(T3_1)
-#-------------------------------------------------------------------------------
-counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386663/SRR23386663.rmdup.sort.chr.bam',
+counts<-featureCounts(files = '/home/rna/SRR23386663/SRR23386663.rmdup.sort.chr.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
 T3_2<-data.frame(counts$counts)
 T3_2<-cbind(row.names(T3_2),T3_2)
 colnames(T3_2)<-c('Gene','MB.T3_2')
 head(T3_2)
-#-------------------------------------------------------------------------------
-counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386664/SRR23386664.rmdup.sort.chr.bam',
+counts<-featureCounts(files = '/home/rna/SRR23386664/SRR23386664.rmdup.sort.chr.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
 T3_3<-data.frame(counts$counts)
 T3_3<-cbind(row.names(T3_3),T3_3)
 colnames(T3_3)<-c('Gene','MB.T3_3')
 head(T3_3)
-#-=-----------------------------------------------------------------------------
-counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386665/SRR23386665.rmdup.sort.chr.bam',
+counts<-featureCounts(files = '/home/rna/SRR23386665/SRR23386665.rmdup.sort.chr.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
 PBS_1<-data.frame(counts$counts)
 PBS_1<-cbind(row.names(PBS_1),PBS_1)
 colnames(PBS_1)<-c('Gene','MB.PBS_1')
 head(PBS_1)
-#-------------------------------------------------------------------------------
-counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386666/SRR23386666.rmdup.sort.chr.bam',
+counts<-featureCounts(files = '/home/rna/SRR23386666/SRR23386666.rmdup.sort.chr.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
 PBS_2<-data.frame(counts$counts)
 PBS_2<-cbind(row.names(PBS_2),PBS_2)
 colnames(PBS_2)<-c('Gene','MB.PBS_2')
 head(PBS_2)
-#-------------------------------------------------------------------------------
-counts<-featureCounts(files = '/home/em_b/work_stuff/chipseq/rna/SRR23386667/SRR23386667.rmdup.sort.chr.bam',
+counts<-featureCounts(files = '/home/rna/SRR23386667/SRR23386667.rmdup.sort.chr.bam',
                       annot.inbuilt = 'mm39',
                       isPairedEnd = TRUE)
 PBS_3<-data.frame(counts$counts)
 PBS_3<-cbind(row.names(PBS_3),PBS_3)
 colnames(PBS_3)<-c('Gene','MB.PBS_3')
 head(PBS_3)
-#-------------------------------------------------------------------------------
 matrix<-cbind(PBS_1,
               PBS_2$MB.PBS_2,
               PBS_3$MB.PBS_3,
@@ -121,13 +115,10 @@ colnames(matrix)<-c('Gene','PBS_1','PBS_2','PBS_3','T3_1','T3_2','T3_3')
 Sys.setenv("http_proxy"="http://my.proxy.org:9999")
 listMarts()
 ensembl=useMart('ENSEMBL_MART_ENSEMBL')
-#listDatasets(ensembl)
 ensembl=useDataset("mmusculus_gene_ensembl",
                    mart = ensembl)
 geneid <- matrix$Gene
 head(geneid)
-#listFilters(ensembl)
-#listAttributes(ensembl)
 genes <-getBM(attributes = c('external_gene_name','entrezgene_id'),
               filters = 'entrezgene_id',
               values = geneid,
@@ -136,7 +127,6 @@ head(genes)
 colnames(genes)[2]<-'Gene'
 colnames(genes)
 output <- merge(genes, matrix, by='Gene')
-#---------------------------------------------------------
 output<-data.frame(output %>%
                      group_by(external_gene_name) %>%
                      summarize(T3_1 = sum(T3_1),
@@ -158,14 +148,12 @@ row.names(coldata)<-make.names(coldata$names,
                                unique=TRUE)
 coldata<-coldata[,-1]
 coldata
-#-----------------------------------------------------------------------------
 colnames(output)
 deseq<-DESeqDataSetFromMatrix(countData = output,colData = coldata,design = ~ condition)
 deseq
 DE<-DESeq(deseq)
 plotMA(DE,ylim=c(-5,5))
 plotDispEsts(DE)
-#-------------------------------------------------------------------------------
 results<-results(DE)
 results
 x<-data.frame(results)
@@ -174,20 +162,15 @@ x<-subset(x,padj< 0.05)
 summary(x)
 upreg<-subset(x,log2FoldChange> 1.5)
 downreg<-subset(x,log2FoldChange< -1.5)
-#setwd('/home/em_b/Downloads')
+#setwd('/home')
 #write.csv(upreg,file='upreg_rna.csv')
 #write.csv(downreg,file='downreg_rna.csv')
 #write.csv(df,file = 'thra_peaks.csv')
-
-
-
-#--------Part2
-setwd('/home/em_b/work_stuff/chipseq/final')
+setwd('/home/chipseq/final')
 df<-read.csv('thra_peaks.csv')
 list<-read.csv('upreg_rna.csv',
                 row.names = 1)
 list
-#write.csv(downreg,file='downreg_rna.csv')
 list<-row.names(list)
 rna_chip_up<-subset(df, subset = SYMBOL %in% list)
 cat(rna_chip_up$SYMBOL)
@@ -213,17 +196,13 @@ cnetplot(edox,
          node_label='all',
          colorEdge=TRUE,
          circular=TRUE)
-cat('Do go next')
 go <- enrichGO(gene = rna_chip_up$geneId,OrgDb = org.Mm.eg.db,ont = "BP")
 View(data.frame(go))
-
 pathways<-c('GO:0007416','GO:0048167','GO:0035249','GO:0021953','GO:1905606',
             'GO:0099174','GO:0099643','GO:0097106','GO:0046928','GO:0021549',
             'GO:0045666','GO:0034329') 
 go@result = go@result[go@result$ID %in% pathways,]
 go@result
-
-
 GO_plot <- pairwise_termsim(go)
 View(data.frame(GO_plot))
 emapplot(GO_plot,
@@ -241,11 +220,9 @@ goplot(GO_plot,
        color = "p.adjust",
        layout = "sugiyama",
        geom = "text")
-break 
 #----GenomeAxisTrack----------------------------------------------------------
 #bm <- useEnsembl(biomart = "ENSEMBL_MART_ENSEMBL", 
 #                 dataset = "mmusculus_gene_ensembl")
-
 #--------------Rora 
 gen<-'mm39'
 chr<-'chr9'
