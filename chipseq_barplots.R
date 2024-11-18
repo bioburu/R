@@ -1,4 +1,3 @@
-
 df<-read.csv('/home/em_b/work_stuff/FCCC/chipseq/h3k27me3_conditional_peak_comparisons.csv',
              row.names = 1)
 df
