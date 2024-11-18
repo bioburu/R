@@ -13,7 +13,7 @@ library(stringr)
 library(fgsea)
 library(Seurat)
 library(ComplexHeatmap)
-setwd('/home/em_b/work_stuff/*Differentiation_study')
+setwd('/home/')
 matrix<-read.csv('GSE224974_mm39_raw_count_matrix.csv',
                  row.names = 1)
 head(matrix)
@@ -150,8 +150,7 @@ Heatmap3D(test,
           row_names_side = 'right',
           row_names_gp=gpar(fontsize=14),
           heatmap_legend_param = list(at = c(0, 10, 100, 500), 
-                                      labels = c('0','10','100','500')))
-break 
+                                      labels = c('0','10','100','500'))) 
 #----chromatin lock complex ----------------------------------------------
 pathway<-select(org.Mm.eg.db,
                 keytype = 'GOALL',
