@@ -1,7 +1,7 @@
 library(tidyverse)
 library(hrbrthemes)
 library(viridis)
-setwd('/home/em_b/work_stuff/FCCC/T3_RNAseq/')
+setwd('/home/T3_RNAseq/')
 matrix<-read.csv('biomart.hg38.csv')
 row.names(matrix)<-make.names(matrix$Gene,unique = TRUE)
 matrix<-matrix[,-c(1)]
@@ -10,7 +10,6 @@ classes<-c('SHH_PBS','SHH_PBS','SHH_PBS',
            'SHH_T3','SHH_T3','SHH_T3',
            'G3_PBS','G3_PBS','G3_PBS',
            'G3_T3','G3_T3','G3_T3')
-
 classes
 NEUROD1<-matrix$NEUROD1
 EZH2<-matrix$EZH2
