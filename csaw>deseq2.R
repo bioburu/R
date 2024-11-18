@@ -19,7 +19,6 @@ bam.files<-c(THRA_0hr='/home/em_b/work_stuff/FCCC/chipseq/bam/D1.0h.tra.rmdup.so
              THRA_t3='/home/em_b/work_stuff/FCCC/chipseq/bam/H3.T3_tra.rmdup.sort.bam')
 bam.files
 #-----count read overlaps in windows. ext= average length of fragments. width= width of window. 
-#data <- windowCounts(bam.files, ext=850, width=50, param=param,bin = TRUE)
 data <- windowCounts(bam.files, ext=500, width=50, param=param,bin = TRUE)
 data
 #----get larger bins for normalization 
