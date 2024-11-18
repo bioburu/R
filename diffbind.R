@@ -13,7 +13,7 @@ mm39
 #-----------------------------
 
 library(DiffBind)
-db<-dba(sampleSheet='/home/em_b/work_stuff/diffbind/diffbind_meta_h3k27me3.csv')
+db<-dba(sampleSheet='/home/diffbind_meta_h3k27me3.csv')
 db
 plot(db)
 counts<-dba.count(db,
