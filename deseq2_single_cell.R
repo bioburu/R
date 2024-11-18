@@ -16,7 +16,7 @@ library(BiocParallel)
 param<-MulticoreParam(workers = 6,
                       progressbar = TRUE)
 register(param)
-setwd('/home/em_b/Desktop/scRNAseq_manuscript/gbm/R2_N')
+setwd('/home/gbm/R2_N')
 counts <- readMM("matrix.mtx.gz")
 genes <- read_tsv("genes.tsv.gz", col_names = FALSE)
 gene_ids <- genes$X2
@@ -29,7 +29,7 @@ matrix<-data.frame(counts)
 names<-c(paste0("norm_", 1:11883))
 colnames(matrix)<-names
 #-------------------------------------------------------------------------------
-setwd('/home/em_b/Desktop/scRNAseq_manuscript/gbm/R2_T')
+setwd('/home/gbm/R2_T')
 counts2 <- readMM("matrix.mtx.gz")
 genes2 <- read_tsv("genes.tsv.gz", col_names = FALSE)
 gene_ids2 <- genes2$X2
@@ -46,7 +46,6 @@ matrix<-matrix[,c(1:1000)]
 matrix2<-matrix2[,c(1:1000)]
 #-------------------------------------------------------------------------------
 Matrix<-cbind(matrix,matrix2)
-#---must add 1 to data frame
 Matrix<-Matrix+1
 rm(counts,counts2,genes,genes2,matrix,matrix2)
 gc()
@@ -71,7 +70,6 @@ deseq<-DESeqDataSetFromMatrix(countData = Matrix,
 gc()
 deseq
 deseq<-estimateSizeFactors(deseq)
-break 
 DE<-DESeq(deseq,
           test = c('LRT'),
           useT = TRUE,
