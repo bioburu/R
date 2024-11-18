@@ -1,1 +1,1 @@
-keep_it_going
+Bioinformatics R templates. Enjoy
