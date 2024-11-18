@@ -1,7 +1,8 @@
-#-------------for Seurat object
+#-------------for seurat object
 FeatureScatter(data, feature1 = "Foxo1", feature2 = 'Dio2',cols = c('skyblue','red','grey','black'),pt.size = 5,
                shuffle = TRUE,seed = 123)
-#---for data frame with variables as colnames (transposed)
+
+#---for data frame
 library(ggpubr)
 matrix<-read.csv('/home/em_b/work_stuff/chipseq/correlations/for_correlations.csv',
                  row.names = 1)
@@ -23,7 +24,7 @@ ggscatter(t,
           font.label = c(10,'bold.italic','blue'),
           add.params = list(color='red',fill='lightgrey'))
 
-#--------------for scRNAseq
+#--------------for scRNAseq seurat object
 df<-FetchData(data,vars = c('ident',top10000),layer = 'counts')
 df<-df[,-1]
 str(df)
