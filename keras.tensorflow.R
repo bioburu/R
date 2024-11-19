@@ -1,156 +1,305 @@
-library(ISLR2)
 library(keras3)
-library(ggplot2)
-library(InformationValue)
-library(neuralnet)
-library(pROC)
-library(ROCR)
+library(lime)
+library(tidyquant)
+library(rsample)
+library(recipes)
+library(yardstick)
+library(corrr)
+library(tidyverse)
+library(tensorflow)
+library(reticulate)
+library(Seurat)
+library(h2o)
 library(Seurat)
 library(tidyverse)
 library(dplyr)
+library(ggplot2)
 library(ggridges)
+library(org.Hs.eg.db)
+library(SeuratWrappers)
+library(plotly)
+library(htmlwidgets)
 library(caTools)
 library(car)
 library(caret)
-library(plotly)
-library(Signac)
-library(Seurat)
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(ggridges)
-library(htmlwidgets)
-require('Seurat.utils')
-library(plotly)
-library(EnsDb.Mmusculus.v79)
+library(InformationValue)
+library(pROC)
+library(ROCR)
 library(celldex)
 library(SingleR)
-library(biomaRt)
-library(ReactomePA)
-library(clusterProfiler)
-setwd('/home/deviancedev01/Desktop/interesting_exps/GSE224679_RAW')
-#-------------------------------------------------------------------------------
-features_path <- 'GSM7029393_111_11_features.tsv.gz'
-barcodes_path <- 'GSM7029393_111_11_barcodes.tsv.gz'
-matrix_path <- 'GSM7029393_111_11_matrix.mtx.gz'
-matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-lesions <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'lesions')
-summary(lesions@active.ident)
-#-----------------------------
-features_path <- 'GSM7029395_111_13_features.tsv.gz'
-barcodes_path <- 'GSM7029395_111_13_barcodes.tsv.gz'
-matrix_path <- 'GSM7029395_111_13_matrix.mtx.gz'
-matrix <- ReadMtx(mtx= matrix_path, features = features_path, cells= barcodes_path)
-normal <- CreateSeuratObject(counts=matrix,min.cells=20,min.features=200,project = 'normal')
-summary(normal@active.ident)
-lesions<-subset(lesions,
-                downsample=2760)
-data<-merge(normal,
-           lesions)
-table(Idents(data))
-data<-JoinLayers(data)
-gene_list<-row.names(data@assays$RNA)
-table(data@meta.data$orig.ident)
-#Data<-subset(data,orig.ident=='17wks')
-#Data2<-subset(data,orig.ident=='20wks')
-#data<-merge(Data,Data2)
-matrix<-FetchData(data,vars = c('orig.ident',gene_list),layer = 'counts')
-#Idents(data)<-data@meta.data$orig.ident
-#data<-JoinLayers(data)
-matrix$orig.ident<-ifelse(matrix$orig.ident=='lesions', 1, 0)
-#------Even out group numbers and shuffle
-set.seed(1435)
-matrix<-matrix[sample(1:nrow(matrix)), ]
-sample <- sample(c(TRUE, FALSE), nrow(matrix), replace=TRUE, prob=c(0.5,0.5))
-train  <- matrix[sample, ]
-test   <- matrix[!sample, ]
-#-------------------------------------------------------------------------
-print("Prepping test data for keras tensorflow")
-#------use the split groups to subsample from entire dataset
-number.cells.train<-nrow(train)
-number.cells.all <- nrow(matrix)
-#------extract test number of observations and sample
-testid <- sample(1:number.cells.all,
-                 number.cells.train)
-testid
-#-------------------------
-print("Convert data frame to x and y tensors for Keras")
-print("x matrix is without intercept (-1) and scaled with mean of 0 with std of 1")
-#---make a matrix where the reference control is the orig.ident
-#----build model contrast with independent variables
-x <- scale(model.matrix(orig.ident ~ . - 1,
-                        data = matrix))
-print("y matrix is response integer")
-#---assign response variable
-y <- matrix$orig.ident
-y
-print("Make model with 2 hidden layers with same hidden units as Neuralnet and RedLU activation function")
-print("Drop out layer rate of 40% per iteration")
-print("output layer at 1 for binomial response")
-#--sudo apt-get install python3-venv
-library(tensorflow)
-#install_tensorflow(envname = "r-tensorflow")
-keras <- keras_model_sequential() %>%
-  layer_dense(input_shape = ncol(x),
-              units = 20, activation = "relu") %>%
-  layer_dense(units = 12, activation = "softmax") %>%
-  layer_dropout(rate = 0.6)%>%
-  layer_dense(units=1)
-keras
-#
-keras %>% compile(
-  optimizer = 'adam',
-  loss = 'binary_crossentropy',
-  metrics = c('accuracy')
+library(plotly)
+library(data.tree)
+library(DiagrammeR)
+library(rpart)
+library(rpart.plot)
+library(h2o)
+tf$config$list_physical_devices("GPU")
+#use_condaenv('/home/deviancedev01/.virtualenvs/r-tensorflow')
+tf$constant("Hello TensorFlow!")
+tensorflow::set_random_seed(42)
+setwd('/home/deviancedev01/Desktop/GSE145370_escc')
+#-------------------------------------
+validation<-readRDS('escc_hsc_validation.rds')
+VlnPlot(validation,features=c('CD274','TP53'))
+validation <- SetIdent(validation, value = "orig.ident")
+table(Idents(validation))
+validation<-subset(validation,downsample=102)
+table(Idents(validation))
+all.genes<-row.names(validation)
+markers<-FindMarkers(validation,features=c(all.genes),
+                     ident.1 = 'escc.tumor',
+                     logfc.threshold=0.5,
+                     min.pct=0.5,
+                     only.pos=FALSE)
+markers<-row.names(markers)
+cat(markers)
+DoHeatmap(validation,
+          features=c(markers))+NoLegend()
+df<-FetchData(validation,vars = c('ident',markers),layer = 'counts')
+set.seed(1232)
+levels(df$ident)
+table(df$ident)
+df$ident<-ifelse(df$ident=='escc.tumor', 1, 0)
+table(df$ident)
+df<-arrange(df,ident)
+df<-df[sample(1:nrow(df)),]
+table(df$ident)
+test<-df
+
+training<-readRDS('escc_hsc_training.rds')
+VlnPlot(training,features=c('CD274','TP53'))
+training <- SetIdent(training, value = "orig.ident")
+table(Idents(training))
+training<-subset(training,downsample=426)
+table(Idents(training))
+all.genes<-row.names(training)
+#-------all genes
+df<-FetchData(training,vars = c('ident',markers),layer = 'counts')
+set.seed(1232)
+levels(df$ident)
+table(df$ident)
+df$ident<-ifelse(df$ident=='escc.tumor', 1, 0)
+table(df$ident)
+df<-arrange(df,ident)
+df<-df[sample(1:nrow(df)),]
+table(df$ident)
+train <-df
+
+x_train <- train %>% dplyr::select(-ident)
+str(x_train)
+
+x_test  <- test %>% dplyr::select(-ident)
+str(x_test)
+
+y_train <- train %>% dplyr::select(ident)
+y_test  <-test %>% dplyr::select(ident)
+
+model_keras <- keras_model_sequential()
+model_keras %>% layer_dense(
+    units              = 16, 
+    kernel_initializer = "uniform", 
+    activation         = "leaky_relu", 
+    input_shape        = ncol(x_train)) %>%
+  layer_dropout(rate = 0.1) %>%
+  layer_dense(
+    units              = 16, 
+    kernel_initializer = "uniform", 
+    activation         = "sigmoid") %>%
+  layer_dropout(rate = 0.1) %>%
+  layer_dense(
+    units              = 1, 
+    kernel_initializer = "uniform", 
+    activation         = "sigmoid") %>%
+  compile(
+    optimizer = 'adam',
+    loss      = 'binary_crossentropy',
+    metrics   = c('accuracy')
+  )
+
+history <- fit(
+  object           = model_keras, 
+  x                = as.matrix(x_train), 
+  y                = y_train,
+  batch_size       = 10, 
+  epochs           = 50,
+  validation_split = 0.50
 )
-#keras %>% compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = c('accuracy'))
-print("Enter data frame into model now")
-history <- keras %>% fit(x[-testid, ], y[-testid], epochs = 100, batch_size = 50,
-                         validation_data = list(x[testid, ], y[testid])
-)
-keras %>%evaluate(x[testid, ], y[testid])
-#
-print("Confusion matrix for keras model")
-predicted <- predict(keras, x[testid, ])
-predicted
-predicted[predicted < 0] <- 0     
-predicted[predicted >1] <- 1 
-predicted<-round(predicted)
-predicted<-as.factor(predicted)
-predicted
-actuals<-matrix$orig.ident[testid]
-actuals<-as.factor(actuals)
-caret::confusionMatrix(actuals, predicted)
-plot(history)
 print(history)
-class(keras)
+plot(history) 
+# Predicted Class
+yhat_keras_class_vec <- predict(object = model_keras, x = as.matrix(x_test)) %>%
+  as.vector()
+
+# Predicted Class Probability
+yhat_keras_prob_vec  <- predict(object = model_keras, x = as.matrix(x_test)) %>%
+  as.vector()
+
+
+# Format test data and predictions for yardstick metrics
+estimates_keras_tbl <- tibble(
+  truth      = as.factor(y_test$ident) %>% fct_recode(yes = "1", no = "0"),
+  estimate   = as.factor(ifelse(yhat_keras_class_vec>0.5,'yes','no')) %>% fct_recode(yes = "1", no = "0"),
+  class_prob = yhat_keras_prob_vec
+)
+str(estimates_keras_tbl)
+# Confusion Table
+estimates_keras_tbl %>% conf_mat(truth, estimate)
+confusion_matrix<-caret::confusionMatrix(estimates_keras_tbl$truth, estimates_keras_tbl$estimate,
+                                         positive='yes')
+fourfoldplot(as.table(confusion_matrix),
+             color = c('grey','skyblue'),
+             std='all.max',
+             main='Keras tensorflow model predictions')
+confusion_matrix
+
+# Accuracy
+estimates_keras_tbl %>% metrics(truth, estimate)
+
+# Setup lime::model_type() function for keras
+model_type.keras.src.models.sequential.Sequential <- function(x, ...) {
+  "classification"
+}
+
+
+# Setup lime::predict_model() function for keras
+predict_model.keras.src.models.sequential.Sequential <- function(x, newdata, type, ...) {
+  pred <- predict(object = x, x = as.matrix(newdata))
+  data.frame(Yes = pred, No = 1 - pred)
+}
+
+# Test our predict_model() function
+predict_model(x = model_keras, newdata = x_test, type = 'raw') %>%
+  tibble::as_tibble()
+
+explainer <- lime(x_train, model_keras)
+
+explanation <- lime::explain(x_test[1:6,], explainer, n_labels = 1, n_features = 6)
+
+plot_features(explanation) +
+  labs(title = "LIME Feature Importance Visualization",
+       subtitle = "Hold Out (Test) Set, First 10 Cases Shown")
+
+final<-unique(explanation$feature)
+markers<-final
+
+#-----final markers
+df<-FetchData(validation,vars = c('ident',markers),layer = 'counts')
+levels(df$ident)
+table(df$ident)
+df$ident<-ifelse(df$ident=='escc.tumor', 1, 0)
+table(df$ident)
+df<-arrange(df,ident)
+df<-df[sample(1:nrow(df)),]
+table(df$ident)
+test<-df
+DoHeatmap(validation,features=c(final))
+table(validation@meta.data$gen_celltype)
+
+df<-FetchData(training,vars = c('ident',markers),layer = 'counts')
+levels(df$ident)
+table(df$ident)
+df$ident<-ifelse(df$ident=='escc.tumor', 1, 0)
+table(df$ident)
+df<-arrange(df,ident)
+df<-df[sample(1:nrow(df)),]
+table(df$ident)
+train <-df
+DoHeatmap(training,features=c(final))
+table(training@meta.data$gen_celltype)
+
+x_train <- train %>% dplyr::select(-ident)
+str(x_train)
+
+x_test  <- test %>% dplyr::select(-ident)
+str(x_test)
+
+y_train <- train %>% dplyr::select(ident)
+y_test  <-test %>% dplyr::select(ident)
+
+model_keras <- keras_model_sequential()
+model_keras %>% layer_dense(
+  units              = 16, 
+  kernel_initializer = "uniform", 
+  activation         = "leaky_relu", 
+  input_shape        = ncol(x_train)) %>%
+  layer_dropout(rate = 0.1) %>%
+  layer_dense(
+    units              = 16, 
+    kernel_initializer = "uniform", 
+    activation         = "sigmoid") %>%
+  layer_dropout(rate = 0.1) %>%
+  layer_dense(
+    units              = 1, 
+    kernel_initializer = "uniform", 
+    activation         = "sigmoid") %>%
+  compile(
+    optimizer = 'adam',
+    loss      = 'binary_crossentropy',
+    metrics   = c('accuracy')
+  )
+
+history <- fit(
+  object           = model_keras, 
+  x                = as.matrix(x_train), 
+  y                = y_train,
+  batch_size       = 20, 
+  epochs           = 50,
+  validation_split = 0.50
+)
+print(history)
+plot(history) 
+# Predicted Class
+yhat_keras_class_vec <- predict(object = model_keras, x = as.matrix(x_test)) %>%
+  as.vector()
+
+# Predicted Class Probability
+yhat_keras_prob_vec  <- predict(object = model_keras, x = as.matrix(x_test)) %>%
+  as.vector()
+
+
+# Format test data and predictions 
+estimates_keras_tbl <- tibble(
+  truth      = as.factor(y_test$ident) %>% fct_recode(yes = "1", no = "0"),
+  estimate   = as.factor(ifelse(yhat_keras_class_vec>0.5,'yes','no')) %>% fct_recode(yes = "1", no = "0"),
+  class_prob = yhat_keras_prob_vec
+)
+str(estimates_keras_tbl)
+
+# Confusion Table
+#estimates_keras_tbl %>% conf_mat(truth, estimate)
+confusion_matrix<-caret::confusionMatrix(estimates_keras_tbl$truth, estimates_keras_tbl$estimate,
+                                         positive='yes')
+fourfoldplot(as.table(confusion_matrix),
+             color = c('grey','skyblue'),
+             std='all.max',
+             main='Keras tensorflow model predictions')
+confusion_matrix
+
+# Accuracy
+estimates_keras_tbl %>% metrics(truth, estimate)
+
+# Setup lime::model_type() function for keras
+model_type.keras.src.models.sequential.Sequential <- function(x, ...) {
+  "classification"
+}
+
+
+# Setup lime::predict_model() function for keras
+predict_model.keras.src.models.sequential.Sequential <- function(x, newdata, type, ...) {
+  pred <- predict(object = x, x = as.matrix(newdata))
+  data.frame(Yes = pred, No = 1 - pred)
+}
+
+# Test our predict_model() function
+predict_model(x = model_keras, newdata = x_test, type = 'raw') %>%
+  tibble::as_tibble()
+
+explainer <- lime(x_train, model_keras)
+
+explanation <- lime::explain(x_test[1:6,], explainer, n_labels = 1, n_features = 9)
+
+plot_features(explanation) +
+  labs(title = "LIME Feature Importance Visualization Final Genes/Cell",
+       subtitle = "Hold Out (Test) Set, First 6 Cases Shown")
+markers
 break 
-#model_type.keras.models.Sequential <- function(keras) {
-#  "classification"}
-
-#predict_model.keras.models.Sequential <- function (x, newdata, type, ...) {
-#  pred <- predict(object = x, x = as.matrix(newdata))
-#  data.frame (Positive = pred, Negative = 1 - pred) }
-
-#predict_model.keras.models.Sequential <- function (keras, matrix, type, ...) {
-#  pred <- predict(object = keras, x = as.matrix(matrix))
-#  data.frame (Positive = pred, Negative = 1 - pred) }
-#predict_model (x       = keras, 
-#               newdata = matrix, 
-#               type    = 'raw') %>%
-#  tibble::as_tibble()
-
-model<-as_classifier(keras, labels = NULL)
-model_type(model)
-
-explainer <- lime::lime (
-  x              = matrix, 
-  model          = model, 
-  bin_continuous = FALSE)
-explanation <- lime::explain (
-  matrix[1:10, ], # Just to show first 10 cases
-  explainer    = explainer, 
-  n_labels     = 1, # explaining a `single class`(Polarity)
-  n_features   = 4, # returns top four features critical to each case
-  kernel_width = 0.5)
-
